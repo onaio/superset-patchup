@@ -1,0 +1,15 @@
+# load from setup.py
+-e .
+
+# others
+pylint
+pylint-flask
+tox
+flake8
+pep8
+coverage
+yapf
+isort
+ipdb
+black
+pip-tools
