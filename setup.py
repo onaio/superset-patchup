@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='superset-patchup',
-    version="0.0.1",
+    version=__import__('superset_patchup').__version__,
     description='Superset blueprint for Canopy - https://canopyinsights.com',
     license='Apache2',
     author='Ona Systems Inc',
