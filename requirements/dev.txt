@@ -100,7 +100,7 @@ python-editor==1.0.4      # via alembic
 python-geohash==0.8.5     # via superset
 python3-openid==3.1.0     # via flask-openid
 pytz==2018.9              # via babel, celery, flower, pandas
-pyyaml==3.13              # via superset
+pyyaml==4.2b1             # via superset
 requests==2.21.0          # via pydruid, superset, tableschema, tabulator
 rfc3986==1.2.0            # via tableschema
 s3transfer==0.1.13        # via boto3
