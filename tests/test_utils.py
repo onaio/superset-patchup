@@ -1,12 +1,13 @@
 """
 This module tests utils
 """
-import sys
 import os
+import sys
 from unittest.mock import patch
 
 sys.path = [os.path.abspath('')] + sys.path
 from superset_patchup.utils import is_safe_url
+
 
 class TestUtils:
     """
@@ -19,11 +20,11 @@ class TestUtils:
         """
         assert(1==1)
 
-    @patch('superset_patchup.utils.request.host_url')
+    @patch('superset_patchup.utils.request')
     def test_is_safe_url(self, mock):
         """
         Test is_safe_url
         """
-        mock.return_value = "https://example.com"
-        assert(is_safe_url("https://example.com/I-am-cool") is True)
-        assert(is_safe_url("https://google.com/I-am-cool") is False)
+        mock.host_url = "https://example.com"
+        assert(is_safe_url("https://example.com") is True)
+        assert(is_safe_url("https://google.com") is False)
