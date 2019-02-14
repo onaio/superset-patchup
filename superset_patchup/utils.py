@@ -40,6 +40,7 @@ def is_safe_url(target_url):
 
     See http://flask.pocoo.org/snippets/62/ for an example.
     """
+    import ipdb; ipdb.set_trace()
     ref_url = urlparse(request.host_url)
     test_url = urlparse(urljoin(request.host_url, target_url))
     return test_url.scheme in ("http",
