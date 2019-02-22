@@ -1,9 +1,7 @@
 """This module holds OAuth Provider profiles"""
-import inspect
 import logging
 import os
 import re
-import sys
 
 from flask import abort, flash, redirect, request
 
@@ -128,6 +126,7 @@ class AuthOAuthView(SupersetAuthOAuthView):
     """something"""
 
     @expose("/oauth-authorized/<provider>")
+    # pylint: disable=too-many-branches
     def oauth_authorized(self, provider):
         """View that a user is redirected to from the Oauth server"""
 
@@ -139,24 +138,26 @@ class AuthOAuthView(SupersetAuthOAuthView):
             flash(u"You denied the request to sign in.", "warning")
             return redirect("login")
 
-        logging.debug("OAUTH Authorized resp: {0}".format(resp))
+        # pylint: disable=logging-fstring-interpolation
+        logging.debug(F"OAUTH Authorized resp: {resp}")
 
         # Retrieves specific user info from the provider
         try:
             self.appbuilder.sm.set_oauth_session(provider, resp)
             userinfo = self.appbuilder.sm.oauth_user_info(provider, resp)
-        except Exception as e:
-            logging.error("Error returning OAuth user info: {0}".format(e))
+        except Exception as no_user:  # pylint: disable=broad-except
+            # pylint: disable=logging-fstring-interpolation
+            logging.error(F"Error returning user info: {no_user}")
             user = None
         else:
-            logging.debug("User info retrieved from {0}: {1}".format(
-                provider, userinfo))
+            # pylint: disable=logging-fstring-interpolation
+            logging.debug(F"User info retrieved from {provider}: {userinfo}")
             # User email is not whitelisted
             if provider in self.appbuilder.sm.oauth_whitelists:
                 whitelist = self.appbuilder.sm.oauth_whitelists[provider]
                 allow = False
-                for e in whitelist:
-                    if re.search(e, userinfo["email"]):
+                for item in whitelist:
+                    if re.search(item, userinfo["email"]):
                         allow = True
                         break
                 if not allow:
@@ -169,25 +170,23 @@ class AuthOAuthView(SupersetAuthOAuthView):
         if user is None:
             flash(as_unicode(self.invalid_login_message), "warning")
             return redirect("login")
-        else:
-            login_user(user)
+        login_user(user)
 
-            # handle custom redirection
-            # first try redirection via a request arg
-            redirect_url = request.args.get("redirect_url")
-            # if we dont yet have a direct url, try and get it from configs
-            if not redirect_url:
-                redirect_url = self.appbuilder.sm.get_oauth_redirect_url(
-                    provider)
-            # if we have it, do the redirection
-            if redirect_url:
-                # check if the url is safe for redirects.
-                if not is_safe_url(redirect_url):
-                    return abort(400)
+        # handle custom redirection
+        # first try redirection via a request arg
+        redirect_url = request.args.get("redirect_url")
+        # if we dont yet have a direct url, try and get it from configs
+        if not redirect_url:
+            redirect_url = self.appbuilder.sm.get_oauth_redirect_url(provider)
+        # if we have it, do the redirection
+        if redirect_url:
+            # check if the url is safe for redirects.
+            if not is_safe_url(redirect_url):
+                return abort(400)
 
-                return redirect(redirect_url)
+            return redirect(redirect_url)
 
-            return redirect(self.appbuilder.get_url_for_index)
+        return redirect(self.appbuilder.get_url_for_index)
 
 
 class CustomSecurityManager(SupersetSecurityManager):
@@ -201,13 +200,16 @@ class CustomSecurityManager(SupersetSecurityManager):
         if none is configured defaults toNone
         this is configured using OAUTH_PROVIDERS and custom_redirect_url key.
         """
+        # pylint: disable=method-hidden
         for _provider in self.oauth_providers:
             if _provider["name"] == provider:
                 return _provider.get("custom_redirect_url")
 
         return None
 
-    def oauth_user_info(self, provider, response=None):
+    # pylint: disable=inconsistent-return-statements
+    # pylint: disable=method-hidden
+    def oauth_user_info(self, provider):
         """Get user info"""
 
         if provider == "onadata":
@@ -215,16 +217,16 @@ class CustomSecurityManager(SupersetSecurityManager):
                 "api/v1/user.json").data)
             username = user["username"]
 
-            me = (self.appbuilder.sm.oauth_remotes[provider].get(
+            user_data = (self.appbuilder.sm.oauth_remotes[provider].get(
                 "api/v1/profiles/{0}.json".format(username)).data)
 
             return {
-                "name": me["name"],
-                "email": me["email"],
-                "id": me["id"],
+                "name": user_data["name"],
+                "email": user_data["email"],
+                "id": user_data["id"],
                 "username": username,
-                "first_name": me["first_name"],
-                "last_name": me["last_name"],
+                "first_name": user_data["first_name"],
+                "last_name": user_data["last_name"],
             }
 
         if provider == "openlmis":
@@ -236,20 +238,19 @@ class CustomSecurityManager(SupersetSecurityManager):
             reference_data_user_id = reference_user_id.data[
                 "referenceDataUserId"]
             # get user details
-            endpoint = "users/{}".format(reference_data_user_id)
+            endpoint = F"users/{reference_data_user_id}"
             user_info = self.appbuilder.sm.oauth_remotes[provider].get(
                 endpoint)
-            me = user_info.data
+            user_data = user_info.data
             # get email
-            email_endpoint = "userContactDetails/{}".format(
-                reference_data_user_id)
+            email_endpoint = F"userContactDetails/{reference_data_user_id}"
             email = self.appbuilder.sm.oauth_remotes[provider].get(
                 email_endpoint)
             return {
-                "name": me["username"],
+                "name": user_data["username"],
                 "email": email.data["emailDetails"]["email"],
-                "id": me["id"],
-                "username": me["username"],
-                "first_name": me["firstName"],
-                "last_name": me["lastName"],
+                "id": user_data["id"],
+                "username": user_data["username"],
+                "first_name": user_data["firstName"],
+                "last_name": user_data["lastName"],
             }
