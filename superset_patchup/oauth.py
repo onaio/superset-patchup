@@ -127,6 +127,7 @@ class AuthOAuthView(SupersetAuthOAuthView):
 
     @expose("/oauth-authorized/<provider>")
     # pylint: disable=too-many-branches
+    # pylint: disable=logging-fstring-interpolation
     def oauth_authorized(self, provider):
         """View that a user is redirected to from the Oauth server"""
 
@@ -138,20 +139,17 @@ class AuthOAuthView(SupersetAuthOAuthView):
             flash(u"You denied the request to sign in.", "warning")
             return redirect("login")
 
-        # pylint: disable=logging-fstring-interpolation
-        logging.debug(F"OAUTH Authorized resp: {resp}")
+        logging.debug(f"OAUTH Authorized resp: {resp}")
 
         # Retrieves specific user info from the provider
         try:
             self.appbuilder.sm.set_oauth_session(provider, resp)
             userinfo = self.appbuilder.sm.oauth_user_info(provider, resp)
         except Exception as no_user:  # pylint: disable=broad-except
-            # pylint: disable=logging-fstring-interpolation
-            logging.error(F"Error returning user info: {no_user}")
+            logging.error(f"Error returning user info: {no_user}")
             user = None
         else:
-            # pylint: disable=logging-fstring-interpolation
-            logging.debug(F"User info retrieved from {provider}: {userinfo}")
+            logging.debug(f"User info retrieved from {provider}: {userinfo}")
             # User email is not whitelisted
             if provider in self.appbuilder.sm.oauth_whitelists:
                 whitelist = self.appbuilder.sm.oauth_whitelists[provider]
@@ -200,16 +198,13 @@ class CustomSecurityManager(SupersetSecurityManager):
         if none is configured defaults toNone
         this is configured using OAUTH_PROVIDERS and custom_redirect_url key.
         """
-        # pylint: disable=method-hidden
         for _provider in self.oauth_providers:
             if _provider["name"] == provider:
                 return _provider.get("custom_redirect_url")
 
         return None
 
-    # pylint: disable=inconsistent-return-statements
-    # pylint: disable=method-hidden
-    def oauth_user_info(self, provider):
+    def oauth_user_info(self, provider):  # pylint: disable=method-hidden
         """Get user info"""
 
         if provider == "onadata":
@@ -238,12 +233,12 @@ class CustomSecurityManager(SupersetSecurityManager):
             reference_data_user_id = reference_user_id.data[
                 "referenceDataUserId"]
             # get user details
-            endpoint = F"users/{reference_data_user_id}"
+            endpoint = f"users/{reference_data_user_id}"
             user_info = self.appbuilder.sm.oauth_remotes[provider].get(
                 endpoint)
             user_data = user_info.data
             # get email
-            email_endpoint = F"userContactDetails/{reference_data_user_id}"
+            email_endpoint = f"userContactDetails/{reference_data_user_id}"
             email = self.appbuilder.sm.oauth_remotes[provider].get(
                 email_endpoint)
             return {
@@ -254,3 +249,5 @@ class CustomSecurityManager(SupersetSecurityManager):
                 "first_name": user_data["firstName"],
                 "last_name": user_data["lastName"],
             }
+
+        return None
