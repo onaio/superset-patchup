@@ -14,12 +14,6 @@ class TestUtils:
     Class to test the utils module
     """
 
-    def test_get_complex_env_var(self):
-        """
-        Test get_complex_env_var
-        """
-        assert(1==1)
-
     @patch('superset_patchup.utils.request')
     def test_is_safe_url(self, mock):
         """
