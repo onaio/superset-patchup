@@ -15,6 +15,7 @@ jobs:
 
       - run:
           name: install system dependencies
+          # libsasl2-dev is required to install superset successfully
           command: |
             sudo apt-get install libsasl2-dev
 
