@@ -13,3 +13,4 @@ isort
 ipdb
 black
 pip-tools
+pytest

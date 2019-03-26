@@ -1,5 +1,5 @@
 """
-Setup.py for django-vega-admin
+Setup.py for superset-patchup
 """
 from setuptools import setup, find_packages
 
