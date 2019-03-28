@@ -121,6 +121,9 @@ PROVIDERS = {
     },
 }
 
+CUSTOM_ROLES = get_complex_env_var("CUSTOM_ROLES", {
+                "olmis_gamma": "all_datasource_access",
+                "cool_role": set(['metric_access', 'all_datasource_access'])})
 
 class AuthOAuthView(SupersetAuthOAuthView):
     """something"""
@@ -191,6 +194,28 @@ class CustomSecurityManager(SupersetSecurityManager):
     """Custom Security Manager Class"""
 
     authoauthview = AuthOAuthView
+
+    def is_custom_defined_permission(self, perm, role_perms):
+        return perm.permission.name in role_perms
+
+    def is_custom_pvm(self, pvm, role_perms):
+        return not (self.is_user_defined_permission(pvm) or
+                    self.is_admin_only(pvm) or
+                    self.is_alpha_only(pvm)) or (
+                        self.is_custom_defined_permission(pvm, role_perms))
+    def sync_role_definitions(self):
+        """Inits the Superset application with security roles and such"""
+        super().sync_role_definitions()
+
+        if get_complex_env_var("ADD_CUSTOM_ROLES", False) is True:
+            for role, role_perms in CUSTOM_ROLES.items():
+                self.set_role(role, self.is_custom_pvm(role_perms=role_perms))
+
+        self.create_missing_perms()
+
+        # commit role and view menu updates
+        self.get_session.commit()
+        self.clean_perms()
 
     def get_oauth_redirect_url(self, provider):
         """
