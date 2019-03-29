@@ -136,7 +136,7 @@ class AuthOAuthView(SupersetAuthOAuthView):
         if "Custom-Api-Token" in request.headers:
             resp = {"access_token": request.headers.get("Custom-Api-Token")}
         if resp is None:
-            flash(u"You denied the request to sign in.", "warning")
+            flash("You denied the request to sign in.", "warning")
             return redirect("login")
 
         logging.debug(f"OAUTH Authorized resp: {resp}")
@@ -159,7 +159,7 @@ class AuthOAuthView(SupersetAuthOAuthView):
                         allow = True
                         break
                 if not allow:
-                    flash(u"You are not authorized.", "warning")
+                    flash("You are not authorized.", "warning")
                     return redirect("login")
             else:
                 logging.debug("No whitelist for OAuth provider")
@@ -195,7 +195,7 @@ class CustomSecurityManager(SupersetSecurityManager):
     def get_oauth_redirect_url(self, provider):
         """
         Returns the custom_redirect_url for the oauth provider
-        if none is configured defaults toNone
+        if none is configured defaults to None
         this is configured using OAUTH_PROVIDERS and custom_redirect_url key.
         """
         for _provider in self.oauth_providers:
@@ -228,22 +228,21 @@ class CustomSecurityManager(SupersetSecurityManager):
             # get access token
             my_token = self.oauth_tokengetter()[0]
             # get referenceDataUserId
-            reference_user_id = self.appbuilder.sm.oauth_remotes[provider].get(
+            reference_user = self.appbuilder.sm.oauth_remotes[provider].get(
                 "oauth/check_token", data={"token": my_token})
-            reference_data_user_id = reference_user_id.data[
-                "referenceDataUserId"]
+            reference_data_user_id = reference_user.data["referenceDataUserId"]
             # get user details
             endpoint = f"users/{reference_data_user_id}"
             user_info = self.appbuilder.sm.oauth_remotes[provider].get(
-                endpoint)
-            user_data = user_info.data
+                endpoint).data
+            user_data = user_info
             # get email
             email_endpoint = f"userContactDetails/{reference_data_user_id}"
             email = self.appbuilder.sm.oauth_remotes[provider].get(
-                email_endpoint)
+                email_endpoint).data
             return {
                 "name": user_data["username"],
-                "email": email.data["emailDetails"]["email"],
+                "email": email["emailDetails"]["email"],
                 "id": user_data["id"],
                 "username": user_data["username"],
                 "first_name": user_data["firstName"],
