@@ -8,6 +8,8 @@ from superset_patchup.utils import is_safe_url, get_complex_env_var
 
 from unittest.mock import patch
 
+sys.path = [os.path.abspath("")] + sys.path
+
 
 class TestUtils:
     """
