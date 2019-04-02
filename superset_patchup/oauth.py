@@ -98,7 +98,9 @@ class CustomSecurityManager(SupersetSecurityManager):
 
         return None
 
-    def oauth_user_info(self, provider):  # pylint: disable=method-hidden
+    # pylint: disable=method-hidden
+    # pylint: disable=unused-argument
+    def oauth_user_info(self, provider, response=None):
         """Get user info"""
 
         if provider == "onadata":
