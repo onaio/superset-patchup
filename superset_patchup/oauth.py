@@ -1,6 +1,5 @@
 """This module holds OAuth Provider profiles"""
 import logging
-import os
 import re
 
 from flask import abort, flash, redirect, request
@@ -14,112 +13,7 @@ from superset.security import SupersetSecurityManager
 
 from flask_login import login_user
 
-from superset_patchup.utils import get_complex_env_var, is_safe_url
-
-PROVIDERS = {
-    "openlmis": {
-        "name":
-        os.getenv("SUPERSET_OPENLMIS_OAUTH_NAME", "openlmis"),
-        "icon":
-        os.getenv("SUPERSET_OPENLMIS_OAUTH_ICON", "fa-sign-in"),
-        "token_key":
-        os.getenv("SUPERSET_OPENLMIS_OAUTH_ACCESS_TOKEN", "access_token"),
-        "custom_redirect_url":
-        os.getenv("SUPERSET_OPENLMIS_REDIRECT_URL"),
-        "remote_app": {
-            "consumer_key":
-            os.getenv("SUPERSET_OPENLMIS_OAUTH_CONSUMER_KEY", "superset"),
-            "consumer_secret":
-            os.getenv("SUPERSET_OPENLMIS_OAUTH_CONSUMER_SECRET", "changeme"),
-            "request_token_params":
-            get_complex_env_var("SUPERSET_OPENLMIS_OAUTH_REQUEST_TOKEN_PARAMS",
-                                {"scope": "read write"}),
-            "access_token_method":
-            os.getenv("SUPERSET_OPENLMIS_OAUTH_ACCESS_TOKEN_METHOD", "POST"),
-            "access_token_headers":
-            get_complex_env_var(
-                "SUPERSET_OPENLMIS_OAUTH_ACCESS_TOKEN_HEADERS",
-                {"Authorization": "Basic c3VwZXJzZXQ6Y2hhbmdlbWU="},
-            ),
-            "base_url":
-            os.getenv("SUPERSET_OPENLMIS_OAUTH_BASE_URL",
-                      "https://uat.openlmis.org/api/oauth"),
-            "access_token_url":
-            os.getenv(
-                "SUPERSET_OPENLMIS_OAUTH_ACCESS_TOKEN_URL",
-                "https://uat.openlmis.org/api/oauth/token?grant_type=authorization_code",  # noqa
-            ),
-            "authorize_url":
-            os.getenv(
-                "SUPERSET_OPENLMIS_OAUTH_AUTHORIZE_URL",
-                "https://uat.openlmis.org/api/oauth/authorize?",
-            ),
-        },
-    },
-    "google": {
-        "name": os.getenv("SUPERSET_GOOGLE_OAUTH_NAME", "google"),
-        "icon": os.getenv("SUPERSET_GOOGLE_OAUTH_ICON", "fa-google"),
-        "token_key": os.getenv("SUPERSET_GOOGLE_OAUTH_TOKEN_KEY", "token_key"),
-        "custom_redirect_url": os.getenv("SUPERSET_GOOGLE_REDIRECT_URL"),
-        "remote_app": {
-            "base_url":
-            os.getenv(
-                "SUPERSET_ONADATA_OAUTH_BASE_URL",
-                "'https://www.googleapis.com/oauth2/v2/'",
-            ),
-            "request_token_params":
-            get_complex_env_var("SUPERSET_GOOGLE_OAUTH_REQUEST_TOKEN_PARAMS",
-                                {"scope": "email profile"}),
-            "request_token_url":
-            os.getenv("SUPERSET_GOOGLE_OAUTH_REQUEST_TOKEN_URL", None),
-            "access_token_url":
-            os.getenv(
-                "SUPERSET_GOOGLE_OAUTH_ACCESS_TOKEN_URL",
-                "https://accounts.google.com/o/oauth2/token",
-            ),
-            "authorize_url":
-            os.getenv(
-                "SUPERSET_GOOGLE_OAUTH_AUTHORIZE_URL",
-                "https://accounts.google.com/o/oauth2/auth",
-            ),
-            "consumer_key":
-            os.getenv("SUPERSET_GOOGLE_OAUTH_CONSUMER_KEY",
-                      "GOOGLE_OAUTH_KEY"),
-            "consumer_secret":
-            os.getenv("SUPERSET_GOOGLE_OAUTH_CONSUMER_SECRET",
-                      "GOOGLE_OAUTH_SECRET"),
-        },
-    },
-    "onadata": {
-        "name":
-        os.getenv("SUPERSET_ONADATA_OAUTH_NAME", "onadata"),
-        "icon":
-        os.getenv("SUPERSET_ONADATA_OAUTH_ICON", "fa-eercast"),
-        "token_key":
-        os.getenv("SUPERSET_ONADATA_OAUTH_ACCESS_TOKEN", "access_token"),
-        "custom_redirect_url":
-        os.getenv("SUPERSET_ONADATA_REDIRECT_URL"),
-        "remote_app": {
-            "consumer_key":
-            os.getenv("SUPERSET_ONADATA_OAUTH_CONSUMER_KEY", "superset"),
-            "consumer_secret":
-            os.getenv("SUPERSET_ONADATA_OAUTH_CONSUMER_SECRET", "changeme"),
-            "request_token_params":
-            get_complex_env_var("SUPERSET_ONADATA_OAUTH_REQUEST_TOKEN_PARAMS",
-                                {"scope": "read write"}),
-            "access_token_method":
-            os.getenv("SUPERSET_ONADATA_OAUTH_ACCESS_TOKEN_METHOD", "POST"),
-            "base_url":
-            os.getenv("SUPERSET_ONADATA_OAUTH_BASE_URL", "https://api.ona.io"),
-            "access_token_url":
-            os.getenv("SUPERSET_ONADATA_OAUTH_ACCESS_TOKEN_URL",
-                      "https://api.ona.io/o/token/"),
-            "authorize_url":
-            os.getenv("SUPERSET_ONADATA_OAUTH_AUTHORIZE_URL",
-                      "https://api.ona.io/o/authorize"),
-        },
-    },
-}
+from superset_patchup.utils import is_safe_url
 
 
 class AuthOAuthView(SupersetAuthOAuthView):
