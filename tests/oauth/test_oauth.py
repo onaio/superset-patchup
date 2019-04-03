@@ -140,19 +140,19 @@ class TestOauth:
     @patch("superset_patchup.oauth.is_safe_url")
     @patch("superset_patchup.oauth.request.args.get")
     @patch("superset_patchup.oauth.login_user")
-    @patch("superset_patchup.oauth.request.get")
     @patch("superset_patchup.oauth.request")
-    def test_access_token(
+    def test_oauth_authorized(
             self,
             mock_request,
-            mock_request_headers,
             mock_login,
             mock_request_redirect,
             mock_safe_url,
             mock_redirect,
     ):
         """
-        Test that the access token is used when passed in the request header
+        This test checks that
+        1. The access token is used when passed in the request header
+        2. Redirect is called with the url passed in the request args
         """
         # Sample authorized response
         mock_authorized_response = {
@@ -163,7 +163,7 @@ class TestOauth:
             "scope": "read write",
         }
 
-        # User info from onadata
+        # Sample user info from onadata
         mock_user_info = {
             "name": "test auth",
             "email": "testauth@ona.io",
@@ -180,17 +180,18 @@ class TestOauth:
             "onadata"].authorized_response = MagicMock(
                 return_value=mock_authorized_response)
         mock_request.headers = {"Custom-Api-Token": "cZpwCzYjpzuSqzekM"}
-        mocccc = MagicMock()
-        oauth_view.appbuilder.sm.set_oauth_session = mocccc
+        auth_session_mock = MagicMock()
+        oauth_view.appbuilder.sm.set_oauth_session = auth_session_mock
         oauth_view.appbuilder.sm.oauth_user_info = MagicMock(
             return_value=mock_user_info)
-        oauth_view.appbuilder.sm.oauth_whitelists = MagicMock(return_value=[])
+        oauth_view.appbuilder.sm.oauth_whitelists = MagicMock()
         oauth_view.appbuilder.sm.auth_user_oauth = MagicMock(
             return_value=mock_user_info)
         oauth_view.appbuilder.sm.get_oauth_redirect_url = MagicMock()
         mock_request_redirect.return_value = "http://example.com"
         mock_safe_url.return_value = True
         oauth_view.oauth_authorized(provider="onadata")
-        mocccc.assert_called_with("onadata",
+        auth_session_mock.assert_called_with("onadata",
                                   {"access_token": "cZpwCzYjpzuSqzekM"})
+        mock_login.assert_call_count = 1
         mock_redirect.assert_called_once_with("http://example.com")
