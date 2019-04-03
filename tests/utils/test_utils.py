@@ -56,7 +56,7 @@ class TestUtils:
         assert params == params_value
 
         # bool variable
-        mock.return_value = 'True'
+        mock.return_value = "True"
         bool_params = get_complex_env_var("PARAMS", default_params)
         assert isinstance(bool_params, bool)
         assert bool_params is True
