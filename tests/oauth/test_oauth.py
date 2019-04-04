@@ -233,4 +233,6 @@ class TestOauth:
         auth_session_mock.assert_called_with("onadata",
                                   {"access_token": "cZpwCzYjpzuSqzekM"})
         mock_login.assert_call_count = 1
+            {"access_token": "cZpwCzYjpzuSqzekM"})
+        assert mock_login.call_count == 1
         mock_redirect.assert_called_once_with("http://example.com")
