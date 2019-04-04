@@ -1,7 +1,7 @@
 """
 This module tests oauth
 """
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from superset_patchup.oauth import CustomSecurityManager
 
@@ -134,3 +134,37 @@ class TestOauth:
         csm = CustomSecurityManager(appbuilder=appbuilder)
         user_info = csm.oauth_user_info(provider=None)
         assert user_info is None
+
+    @patch("superset_patchup.oauth.SupersetSecurityManager.clean_perms")
+    @patch("superset_patchup.oauth.SupersetSecurityManager.get_session")
+    @patch(
+        "superset_patchup.oauth.SupersetSecurityManager.create_missing_perms")
+    @patch("superset_patchup.oauth.CustomSecurityManager.set_custom_role")
+    @patch("superset_patchup.oauth.get_complex_env_var")
+    @patch(
+        "superset_patchup.oauth.SupersetSecurityManager.sync_role_definitions")
+    def test_custom_roles(
+            self,
+            mock_super,
+            mock_vars,
+            mock_set_custom_role,
+            mock_create_missing_perms,
+            mock_get_session,
+            mock_clean_perms,
+    ):
+        """
+        Test that when add custom roles is set to true, the roles specified
+        in the configs are created
+        """
+        # Sample roles
+        custom_roles = {"Test_role": "{'all_datasource_access'}"}
+
+        appbuilder = MagicMock()
+        mock_super.return_value = True
+        mock_vars.side_effect = [True, custom_roles]
+        csm = CustomSecurityManager(appbuilder=appbuilder)
+        csm.sync_role_definitions()
+        mock_set_custom_role.assert_call_count = 1
+        mock_create_missing_perms.assert_call_count = 1
+        mock_get_session.assert_call_count = 1
+        mock_clean_perms.assert_call_count = 1

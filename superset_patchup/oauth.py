@@ -6,6 +6,7 @@ import re
 from flask import abort, flash, redirect, request
 
 from flask_appbuilder._compat import as_unicode
+from flask_appbuilder.security.sqla import models as ab_models
 from flask_appbuilder.security.views import \
     AuthOAuthView as SupersetAuthOAuthView
 from flask_appbuilder.security.views import expose
@@ -191,6 +192,52 @@ class CustomSecurityManager(SupersetSecurityManager):
     """Custom Security Manager Class"""
 
     authoauthview = AuthOAuthView
+
+    # pylint: disable=no-self-use
+    def is_custom_defined_permission(self, perm, role_perms):
+        """
+        Returns the list of permissions in role_perms
+        """
+        return perm.permission.name in role_perms
+
+    def is_custom_pvm(self, pvm, role_perms):
+        """
+        Checks if the permission should be granted or not for the custom role
+        returns a boolean value
+        """
+        return not (self.is_user_defined_permission(pvm)
+                    or self.is_admin_only(pvm) or self.is_alpha_only(pvm)) or (
+                        self.is_custom_defined_permission(pvm, role_perms))
+
+    def set_custom_role(self, role_name, pvm_check, role_perms):
+        """
+        Assign permissions to a role
+        """
+        # pylint: disable=logging-format-interpolation
+        logging.info("Syncing {} perms".format(role_name))
+        sesh = self.get_session
+        pvms = sesh.query(ab_models.PermissionView).all()
+        pvms = [p for p in pvms if p.permission and p.view_menu]
+        role = self.add_role(role_name)
+        role_pvms = [p for p in pvms if pvm_check(p, role_perms)]
+        role.permissions = role_pvms
+        sesh.merge(role)
+        sesh.commit()
+
+    def sync_role_definitions(self):
+        """Inits the Superset application with security roles and such"""
+        super().sync_role_definitions()
+
+        if get_complex_env_var("ADD_CUSTOM_ROLES", False) is True:
+            custom_roles = get_complex_env_var("CUSTOM_ROLES", {})
+            for role, role_perms in custom_roles.items():
+                self.set_custom_role(role, self.is_custom_pvm, role_perms)
+
+        self.create_missing_perms()
+
+        # commit role and view menu updates
+        self.get_session.commit()
+        self.clean_perms()
 
     def get_oauth_redirect_url(self, provider):
         """
