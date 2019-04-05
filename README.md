@@ -10,7 +10,7 @@ This can be done this way:
 
 ```sh
 # to install version 0.1.0
-pip install git+https://github.com/onaio/superset-patchup.git@0.1.0 
+pip install git+https://github.com/onaio/superset-patchup.git@v0.1.0  
 ```
 
 Once installed, you would need to modify the `superset_config.py` to configure Superset using Superset-patchup.
