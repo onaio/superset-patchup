@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from superset import app
 
-from superset_patchup.oauth import CustomSecurityManager
+from superset_patchup.oauth import AuthOAuthView, CustomSecurityManager
 
 
 class TestOauth:
@@ -19,6 +19,7 @@ class TestOauth:
         None is returned
         """
         appbuilder = MagicMock()
+        CustomSecurityManager.oauth_providers = [{"name": "onadata"}]
         csm = CustomSecurityManager(appbuilder=appbuilder)
         redirect_url = csm.get_oauth_redirect_url(provider="onadata")
         assert redirect_url is None
@@ -150,8 +151,8 @@ class TestOauth:
             mock_sync_role_definitions,
             mock_set_custom_role,
             mock_is_custom_pvm,
-            mock_create_missing_perms, # pylint: disable=unused-argument
-            mock_get_session, # pylint: disable=unused-argument
+            mock_create_missing_perms,  # pylint: disable=unused-argument
+            mock_get_session,  # pylint: disable=unused-argument
             mock_clean_perms,
     ):
         """
@@ -173,3 +174,64 @@ class TestOauth:
         assert mock_args[0][1] == mock_is_custom_pvm
         assert mock_args[0][2] == {'all_datasource_access'}
         assert mock_clean_perms.call_count == 1
+
+    @patch("superset_patchup.oauth.redirect")
+    @patch("superset_patchup.oauth.is_safe_url")
+    @patch("superset_patchup.oauth.request.args.get")
+    @patch("superset_patchup.oauth.login_user")
+    @patch("superset_patchup.oauth.request")
+    def test_oauth_authorized(
+            self,
+            mock_request,
+            mock_login,
+            mock_request_redirect,
+            mock_safe_url,
+            mock_redirect,
+    ):
+        """
+        This test checks that
+        1. The access token is used when passed in the request header
+        2. Redirect is called with the url passed in the request args
+        """
+        # Sample authorized response
+        mock_authorized_response = {
+            "access_token": "cZpwCzYjpzuSqzekM",
+            "token_type": "Bearer",
+            "expires_in": 3600,
+            "refresh_token": "Sui6j4nQtbmU9P",
+            "scope": "read write",
+        }
+
+        # Sample user info from onadata
+        mock_user_info = {
+            "name": "test auth",
+            "email": "testauth@ona.io",
+            "id": 58863,
+            "username": "testauth",
+            "first_name": "test",
+            "last_name": "auth",
+            "is_active": True,
+        }
+
+        oauth_view = AuthOAuthView()
+        oauth_view.appbuilder = MagicMock()
+        oauth_view.appbuilder.sm.oauth_remotes[
+            "onadata"].authorized_response = MagicMock(
+                return_value=mock_authorized_response)
+        mock_request.headers = {"Custom-Api-Token": "cZpwCzYjpzuSqzekM"}
+        auth_session_mock = MagicMock()
+        oauth_view.appbuilder.sm.set_oauth_session = auth_session_mock
+        oauth_view.appbuilder.sm.oauth_user_info = MagicMock(
+            return_value=mock_user_info)
+        oauth_view.appbuilder.sm.oauth_whitelists = MagicMock()
+        oauth_view.appbuilder.sm.auth_user_oauth = MagicMock(
+            return_value=mock_user_info)
+        oauth_view.appbuilder.sm.get_oauth_redirect_url = MagicMock()
+        mock_request_redirect.return_value = "http://example.com"
+        mock_safe_url.return_value = True
+        oauth_view.oauth_authorized(provider="onadata")
+        auth_session_mock.assert_called_with("onadata",
+                                             {"access_token":
+                                              "cZpwCzYjpzuSqzekM"})
+        assert mock_login.call_count == 1
+        mock_redirect.assert_called_once_with("http://example.com")
