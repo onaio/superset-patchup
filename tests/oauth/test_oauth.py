@@ -151,8 +151,8 @@ class TestOauth:
             mock_sync_role_definitions,
             mock_set_custom_role,
             mock_is_custom_pvm,
-            mock_create_missing_perms, # pylint: disable=unused-argument
-            mock_get_session, # pylint: disable=unused-argument
+            mock_create_missing_perms,  # pylint: disable=unused-argument
+            mock_get_session,  # pylint: disable=unused-argument
             mock_clean_perms,
     ):
         """
@@ -231,8 +231,7 @@ class TestOauth:
         mock_safe_url.return_value = True
         oauth_view.oauth_authorized(provider="onadata")
         auth_session_mock.assert_called_with("onadata",
-                                  {"access_token": "cZpwCzYjpzuSqzekM"})
-        mock_login.assert_call_count = 1
-            {"access_token": "cZpwCzYjpzuSqzekM"})
+                                             {"access_token":
+                                              "cZpwCzYjpzuSqzekM"})
         assert mock_login.call_count == 1
         mock_redirect.assert_called_once_with("http://example.com")
