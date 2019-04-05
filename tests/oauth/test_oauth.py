@@ -141,6 +141,7 @@ class TestOauth:
     @patch("superset_patchup.oauth.SupersetSecurityManager.get_session")
     @patch(
         "superset_patchup.oauth.SupersetSecurityManager.create_missing_perms")
+    @patch("superset_patchup.oauth.CustomSecurityManager.is_custom_pvm")
     @patch("superset_patchup.oauth.CustomSecurityManager.set_custom_role")
     @patch(
         "superset_patchup.oauth.SupersetSecurityManager.sync_role_definitions")
@@ -148,6 +149,7 @@ class TestOauth:
             self,
             mock_sync_role_definitions,
             mock_set_custom_role,
+            mock_is_custom_pvm,
             mock_create_missing_perms, # pylint: disable=unused-argument
             mock_get_session, # pylint: disable=unused-argument
             mock_clean_perms,
@@ -168,6 +170,6 @@ class TestOauth:
 
         mock_args = mock_set_custom_role.call_args_list[0]
         assert mock_args[0][0] == 'Test_role'
-        assert callable(mock_args[0][1])
+        assert mock_args[0][1] == mock_is_custom_pvm
         assert mock_args[0][2] == {'all_datasource_access'}
         assert mock_clean_perms.call_count == 1
