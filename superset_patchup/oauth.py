@@ -1,125 +1,17 @@
 """This module holds OAuth Provider profiles"""
 import logging
-import os
 import re
 
 from flask import abort, flash, redirect, request
-
 from flask_appbuilder._compat import as_unicode
+from flask_appbuilder.security.sqla import models as ab_models
 from flask_appbuilder.security.views import \
     AuthOAuthView as SupersetAuthOAuthView
 from flask_appbuilder.security.views import expose
-
+from flask_login import login_user
 from superset.security import SupersetSecurityManager
 
-from flask_login import login_user
-
-from superset_patchup.utils import get_complex_env_var, is_safe_url
-
-PROVIDERS = {
-    "openlmis": {
-        "name":
-        os.getenv("SUPERSET_OPENLMIS_OAUTH_NAME", "openlmis"),
-        "icon":
-        os.getenv("SUPERSET_OPENLMIS_OAUTH_ICON", "fa-sign-in"),
-        "token_key":
-        os.getenv("SUPERSET_OPENLMIS_OAUTH_ACCESS_TOKEN", "access_token"),
-        "custom_redirect_url":
-        os.getenv("SUPERSET_OPENLMIS_REDIRECT_URL"),
-        "remote_app": {
-            "consumer_key":
-            os.getenv("SUPERSET_OPENLMIS_OAUTH_CONSUMER_KEY", "superset"),
-            "consumer_secret":
-            os.getenv("SUPERSET_OPENLMIS_OAUTH_CONSUMER_SECRET", "changeme"),
-            "request_token_params":
-            get_complex_env_var("SUPERSET_OPENLMIS_OAUTH_REQUEST_TOKEN_PARAMS",
-                                {"scope": "read write"}),
-            "access_token_method":
-            os.getenv("SUPERSET_OPENLMIS_OAUTH_ACCESS_TOKEN_METHOD", "POST"),
-            "access_token_headers":
-            get_complex_env_var(
-                "SUPERSET_OPENLMIS_OAUTH_ACCESS_TOKEN_HEADERS",
-                {"Authorization": "Basic c3VwZXJzZXQ6Y2hhbmdlbWU="},
-            ),
-            "base_url":
-            os.getenv("SUPERSET_OPENLMIS_OAUTH_BASE_URL",
-                      "https://uat.openlmis.org/api/oauth"),
-            "access_token_url":
-            os.getenv(
-                "SUPERSET_OPENLMIS_OAUTH_ACCESS_TOKEN_URL",
-                "https://uat.openlmis.org/api/oauth/token?grant_type=authorization_code",  # noqa
-            ),
-            "authorize_url":
-            os.getenv(
-                "SUPERSET_OPENLMIS_OAUTH_AUTHORIZE_URL",
-                "https://uat.openlmis.org/api/oauth/authorize?",
-            ),
-        },
-    },
-    "google": {
-        "name": os.getenv("SUPERSET_GOOGLE_OAUTH_NAME", "google"),
-        "icon": os.getenv("SUPERSET_GOOGLE_OAUTH_ICON", "fa-google"),
-        "token_key": os.getenv("SUPERSET_GOOGLE_OAUTH_TOKEN_KEY", "token_key"),
-        "custom_redirect_url": os.getenv("SUPERSET_GOOGLE_REDIRECT_URL"),
-        "remote_app": {
-            "base_url":
-            os.getenv(
-                "SUPERSET_ONADATA_OAUTH_BASE_URL",
-                "'https://www.googleapis.com/oauth2/v2/'",
-            ),
-            "request_token_params":
-            get_complex_env_var("SUPERSET_GOOGLE_OAUTH_REQUEST_TOKEN_PARAMS",
-                                {"scope": "email profile"}),
-            "request_token_url":
-            os.getenv("SUPERSET_GOOGLE_OAUTH_REQUEST_TOKEN_URL", None),
-            "access_token_url":
-            os.getenv(
-                "SUPERSET_GOOGLE_OAUTH_ACCESS_TOKEN_URL",
-                "https://accounts.google.com/o/oauth2/token",
-            ),
-            "authorize_url":
-            os.getenv(
-                "SUPERSET_GOOGLE_OAUTH_AUTHORIZE_URL",
-                "https://accounts.google.com/o/oauth2/auth",
-            ),
-            "consumer_key":
-            os.getenv("SUPERSET_GOOGLE_OAUTH_CONSUMER_KEY",
-                      "GOOGLE_OAUTH_KEY"),
-            "consumer_secret":
-            os.getenv("SUPERSET_GOOGLE_OAUTH_CONSUMER_SECRET",
-                      "GOOGLE_OAUTH_SECRET"),
-        },
-    },
-    "onadata": {
-        "name":
-        os.getenv("SUPERSET_ONADATA_OAUTH_NAME", "onadata"),
-        "icon":
-        os.getenv("SUPERSET_ONADATA_OAUTH_ICON", "fa-eercast"),
-        "token_key":
-        os.getenv("SUPERSET_ONADATA_OAUTH_ACCESS_TOKEN", "access_token"),
-        "custom_redirect_url":
-        os.getenv("SUPERSET_ONADATA_REDIRECT_URL"),
-        "remote_app": {
-            "consumer_key":
-            os.getenv("SUPERSET_ONADATA_OAUTH_CONSUMER_KEY", "superset"),
-            "consumer_secret":
-            os.getenv("SUPERSET_ONADATA_OAUTH_CONSUMER_SECRET", "changeme"),
-            "request_token_params":
-            get_complex_env_var("SUPERSET_ONADATA_OAUTH_REQUEST_TOKEN_PARAMS",
-                                {"scope": "read write"}),
-            "access_token_method":
-            os.getenv("SUPERSET_ONADATA_OAUTH_ACCESS_TOKEN_METHOD", "POST"),
-            "base_url":
-            os.getenv("SUPERSET_ONADATA_OAUTH_BASE_URL", "https://api.ona.io"),
-            "access_token_url":
-            os.getenv("SUPERSET_ONADATA_OAUTH_ACCESS_TOKEN_URL",
-                      "https://api.ona.io/o/token/"),
-            "authorize_url":
-            os.getenv("SUPERSET_ONADATA_OAUTH_AUTHORIZE_URL",
-                      "https://api.ona.io/o/authorize"),
-        },
-    },
-}
+from superset_patchup.utils import is_safe_url
 
 
 class AuthOAuthView(SupersetAuthOAuthView):
@@ -192,6 +84,58 @@ class CustomSecurityManager(SupersetSecurityManager):
 
     authoauthview = AuthOAuthView
 
+    # pylint: disable=no-self-use
+    def is_custom_defined_permission(self, perm, role_perms):
+        """
+        Returns the list of permissions in role_perms
+        """
+        return perm.permission.name in role_perms
+
+    def is_custom_pvm(self, pvm, role_perms):
+        """
+        Checks if the permission should be granted or not for the custom role
+        returns a boolean value
+        """
+        return not (self.is_user_defined_permission(pvm)
+                    or self.is_admin_only(pvm) or self.is_alpha_only(pvm)) or (
+                        self.is_custom_defined_permission(pvm, role_perms))
+
+    def set_custom_role(self, role_name, pvm_check, role_perms):
+        """
+        Assign permissions to a role
+        """
+        # pylint: disable=logging-format-interpolation
+        logging.info("Syncing {} perms".format(role_name))
+        sesh = self.get_session
+        pvms = sesh.query(ab_models.PermissionView).all()
+        pvms = [p for p in pvms if p.permission and p.view_menu]
+        role = self.add_role(role_name)
+        role_pvms = [p for p in pvms if pvm_check(p, role_perms)]
+        role.permissions = role_pvms
+        sesh.merge(role)
+        sesh.commit()
+
+    def sync_role_definitions(self):
+        """Inits the Superset application with security roles and such"""
+        super().sync_role_definitions()
+
+        # dirty hack.  We need to load the app from here because at the top
+        # of the file superset is not yet initialized with an app property
+        from superset import app
+
+        add_custom_roles = app.config.get('ADD_CUSTOM_ROLES', False)
+        custom_roles = app.config.get('CUSTOM_ROLES', {})
+
+        if add_custom_roles is True:
+            for role, role_perms in custom_roles.items():
+                self.set_custom_role(role, self.is_custom_pvm, role_perms)
+
+        self.create_missing_perms()
+
+        # commit role and view menu updates
+        self.get_session.commit()
+        self.clean_perms()
+
     def get_oauth_redirect_url(self, provider):
         """
         Returns the custom_redirect_url for the oauth provider
@@ -204,7 +148,9 @@ class CustomSecurityManager(SupersetSecurityManager):
 
         return None
 
-    def oauth_user_info(self, provider):  # pylint: disable=method-hidden
+    # pylint: disable=method-hidden
+    # pylint: disable=unused-argument
+    def oauth_user_info(self, provider, response=None):
         """Get user info"""
 
         if provider == "onadata":
