@@ -120,8 +120,8 @@ class CustomSecurityManager(SupersetSecurityManager):
         """Inits the Superset application with security roles and such"""
         super().sync_role_definitions()
 
-        add_custom_roles = app.config['ADD_CUSTOM_ROLES']
-        custom_roles = app.config['CUSTOM_ROLES']
+        add_custom_roles = app.config.get('ADD_CUSTOM_ROLES', False)
+        custom_roles = app.config.get('CUSTOM_ROLES', {})
 
         if add_custom_roles is True:
             for role, role_perms in custom_roles.items():
