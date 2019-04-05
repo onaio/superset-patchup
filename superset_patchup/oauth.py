@@ -9,7 +9,6 @@ from flask_appbuilder.security.views import \
     AuthOAuthView as SupersetAuthOAuthView
 from flask_appbuilder.security.views import expose
 from flask_login import login_user
-from superset import app
 from superset.security import SupersetSecurityManager
 
 from superset_patchup.utils import is_safe_url
@@ -119,6 +118,10 @@ class CustomSecurityManager(SupersetSecurityManager):
     def sync_role_definitions(self):
         """Inits the Superset application with security roles and such"""
         super().sync_role_definitions()
+
+        # dirty hack.  We need to load the app from here because at the top
+        # of the file superset is not yet initialized with an app property
+        from superset import app
 
         add_custom_roles = app.config.get('ADD_CUSTOM_ROLES', False)
         custom_roles = app.config.get('CUSTOM_ROLES', {})
