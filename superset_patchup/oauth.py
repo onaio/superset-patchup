@@ -15,7 +15,7 @@ from superset_patchup.utils import is_safe_url
 
 
 class AuthOAuthView(SupersetAuthOAuthView):
-    """something"""
+    """ Flask-AppBuilder's Authentication OAuth view"""
 
     @expose("/oauth-authorized/<provider>")
     # pylint: disable=too-many-branches
