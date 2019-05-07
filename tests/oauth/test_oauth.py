@@ -128,6 +128,50 @@ class TestOauth:
         user_info = csm.oauth_user_info(provider="openlmis")
         assert user_info == result_info
 
+    def test_oauth_user_info_opensrp_provider(self):
+        """
+        Test that we get the right user information
+        with the OpenSRP provider
+        """
+        # Sample data returned OpenSRP
+        data = {"userName": "tlv1", "roles": ["Privilege Level: Full"]}
+
+        # Expected result
+        result_info = {
+            "username": "tlv1",
+        }
+
+        appbuilder = MagicMock()
+        user_mock = MagicMock()
+        user_mock.data = data
+        appbuilder.sm.oauth_remotes["OpenSRP"].get = MagicMock(
+            side_effect=[user_mock])
+        csm = CustomSecurityManager(appbuilder=appbuilder)
+        user_info = csm.oauth_user_info(provider="OpenSRP")
+        assert user_info == result_info
+
+        # Sample data returned OpenSRP with preferredName
+        data2 = {
+            "preferredName": "mosh",
+            "userName": "mosh",
+            "roles": ["Privilege Level: Full"]
+        }
+
+        # Expected result
+        result_info2 = {
+            "name": "mosh",
+            "username": "mosh"
+        }
+
+        appbuilder2 = MagicMock()
+        user_mock2 = MagicMock()
+        user_mock2.data = data2
+        appbuilder2.sm.oauth_remotes["OpenSRP"].get = MagicMock(
+            side_effect=[user_mock2])
+        csm2 = CustomSecurityManager(appbuilder=appbuilder2)
+        user_info2 = csm2.oauth_user_info(provider="OpenSRP")
+        assert user_info2 == result_info2
+
     def test_oauth_user_info_no_provider(self):
         """
         Test that when no provider is provided
