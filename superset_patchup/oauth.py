@@ -170,6 +170,17 @@ class CustomSecurityManager(SupersetSecurityManager):
                 "last_name": user_data["last_name"],
             }
 
+        if provider == "OpenSRP":
+            user_object = (self.appbuilder.sm.oauth_remotes[provider].get(
+                "api/v1/user.json").data)
+
+            result = {"username": user_object["userName"]}
+
+            if user_object.get("preferredName"):
+                result["name"] = user_object.get("preferredName")
+
+            return result
+
         if provider == "openlmis":
             # get access token
             my_token = self.oauth_tokengetter()[0]
