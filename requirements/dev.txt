@@ -4,11 +4,11 @@
 #
 #    pip-compile --output-file requirements/dev.txt requirements/dev.in
 #
-alembic==1.0.9            # via flask-migrate
+
+alembic==1.0.10           # via flask-migrate
 amqp==2.4.2               # via kombu
-apispec[yaml]==1.2.1      # via flask-appbuilder
+apispec[yaml]==1.3.3      # via flask-appbuilder
 appdirs==1.4.3            # via black
-appnope==0.1.0            # via ipython
 asn1crypto==0.24.0        # via cryptography
 astroid==2.2.5            # via pylint, pylint-flask
 atomicwrites==1.3.0       # via pytest
@@ -45,7 +45,7 @@ flask-jwt-extended==3.18.1  # via flask-appbuilder
 flask-login==0.4.1        # via flask-appbuilder
 flask-migrate==2.4.0      # via superset
 flask-openid==1.2.5       # via flask-appbuilder
-flask-sqlalchemy==2.3.2   # via flask-appbuilder, flask-migrate
+flask-sqlalchemy==2.4.0   # via flask-appbuilder, flask-migrate
 flask-wtf==0.14.2         # via flask-appbuilder, superset
 flask==0.12.4             # via flask-appbuilder, flask-babel, flask-caching, flask-compress, flask-jwt-extended, flask-login, flask-migrate, flask-openid, flask-sqlalchemy, flask-wtf, superset
 flower==0.9.3             # via superset
@@ -56,11 +56,12 @@ gunicorn==19.9.0          # via superset
 humanize==0.5.1           # via superset
 idna==2.8                 # via requests, superset
 ijson==2.3                # via tabulator
+importlib-metadata==0.9   # via pluggy
 ipdb==0.12
 ipython-genutils==0.2.0   # via traitlets
-ipython==7.4.0            # via ipdb
+ipython==7.5.0            # via ipdb
 isodate==0.6.0            # via superset, tableschema
-isort==4.3.17
+isort==4.3.18
 itsdangerous==1.1.0       # via flask
 jdcal==1.4.1              # via openpyxl
 jedi==0.13.3              # via ipython
@@ -75,7 +76,7 @@ mako==1.0.9               # via alembic
 markdown==3.1             # via superset
 markupsafe==1.1.1         # via jinja2, mako
 marshmallow-enum==1.4.1   # via flask-appbuilder
-marshmallow-sqlalchemy==0.16.2  # via flask-appbuilder
+marshmallow-sqlalchemy==0.16.3  # via flask-appbuilder
 marshmallow==2.19.2       # via flask-appbuilder, marshmallow-enum, marshmallow-sqlalchemy
 mccabe==0.6.1             # via flake8, pylint
 more-itertools==7.0.0     # via pytest
@@ -88,8 +89,8 @@ pathlib2==2.3.3           # via superset
 pep8==1.7.1
 pexpect==4.7.0            # via ipython
 pickleshare==0.7.5        # via ipython
-pip-tools==3.6.0
-pluggy==0.9.0             # via pytest, tox
+pip-tools==3.6.1
+pluggy==0.10.0            # via pytest, tox
 polyline==1.3.2           # via superset
 prison==0.1.0             # via flask-appbuilder
 prompt-toolkit==2.0.9     # via ipython
@@ -105,7 +106,7 @@ pyjwt==1.7.1              # via flask-appbuilder, flask-jwt-extended
 pylint-flask==0.6
 pylint-plugin-utils==0.5  # via pylint-flask
 pylint==2.3.1
-pyrsistent==0.14.11       # via jsonschema
+pyrsistent==0.15.1        # via jsonschema
 pytest==4.4.1
 python-dateutil==2.8.0    # via alembic, botocore, flask-appbuilder, pandas, pyhive, superset, tableschema
 python-editor==1.0.4      # via alembic
@@ -131,10 +132,10 @@ toml==0.10.0              # via black, tox
 tornado==5.1.1            # via flower
 tox==3.9.0
 traitlets==4.3.2          # via ipython
-typed-ast==1.3.4          # via astroid
+typed-ast==1.3.5          # via astroid
 unicodecsv==0.14.1        # via superset, tableschema, tabulator
 unidecode==1.0.23         # via superset
-urllib3==1.24.2
+urllib3==1.24.3
 vine==1.3.0               # via amqp, celery
 virtualenv==16.5.0        # via tox
 wcwidth==0.1.7            # via prompt-toolkit
@@ -144,3 +145,4 @@ wrapt==1.11.1             # via astroid
 wtforms==2.2.1            # via flask-wtf
 xlrd==1.2.0               # via tabulator
 yapf==0.27.0
+zipp==0.4.0               # via importlib-metadata
