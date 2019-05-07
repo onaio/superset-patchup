@@ -71,10 +71,15 @@ class TestOauth:
         user_mock.data = user_endpoint
         profile_mock = MagicMock()
         profile_mock.data = profiles_endpoint
-        appbuilder.sm.oauth_remotes["onadata"].get = MagicMock(
-            side_effect=[user_mock, profile_mock])
+        request_mock = MagicMock(side_effect=[user_mock, profile_mock])
+        appbuilder.sm.oauth_remotes["onadata"].get = request_mock
         csm = CustomSecurityManager(appbuilder=appbuilder)
         user_info = csm.oauth_user_info(provider="onadata")
+        assert request_mock.call_count == 2
+        user_info_call, _ = request_mock.call_args_list[0]
+        userprofile_call, _ = request_mock.call_args_list[1]
+        assert user_info_call[0] == "api/v1/user.json"
+        assert userprofile_call[0] == "api/v1/profiles/testauth.json"
         assert user_info == result_info
 
     def test_oauth_user_info_openlmis_provider(self):
@@ -120,12 +125,24 @@ class TestOauth:
         user_email = MagicMock()
         user_email.data = contacts_endpoint
 
-        appbuilder.sm.oauth_remotes["openlmis"].get = MagicMock(
+        request_mock = MagicMock(
             side_effect=[reference_user, user_data, user_email])
+
+        appbuilder.sm.oauth_remotes["openlmis"].get = request_mock
         csm = CustomSecurityManager(appbuilder=appbuilder)
         csm.oauth_tokengetter = MagicMock(
             return_value=["a337ec45-31a0-4f2b-9b2e-a105c4b669bb"])
         user_info = csm.oauth_user_info(provider="openlmis")
+
+        assert request_mock.call_count == 3
+        check_token_call, _ = request_mock.call_args_list[0]
+        user_call, _ = request_mock.call_args_list[1]
+        contacts_call, _ = request_mock.call_args_list[2]
+        assert check_token_call[0] == "oauth/check_token"
+        assert user_call[0] == "users/a337ec45-31a0-4f2b-9b2e-a105c4b669bb"
+        assert contacts_call[
+            0] == "userContactDetails/a337ec45-31a0-4f2b-9b2e-a105c4b669bb"
+
         assert user_info == result_info
 
     def test_oauth_user_info_opensrp_provider(self):
@@ -165,11 +182,12 @@ class TestOauth:
 
         appbuilder2 = MagicMock()
         user_mock2 = MagicMock()
+        request_mock = MagicMock(side_effect=[user_mock2])
         user_mock2.data = data2
-        appbuilder2.sm.oauth_remotes["OpenSRP"].get = MagicMock(
-            side_effect=[user_mock2])
+        appbuilder2.sm.oauth_remotes["OpenSRP"].get = request_mock
         csm2 = CustomSecurityManager(appbuilder=appbuilder2)
         user_info2 = csm2.oauth_user_info(provider="OpenSRP")
+        request_mock.assert_called_once_with("api/v1/user.json")
         assert user_info2 == result_info2
 
     def test_oauth_user_info_no_provider(self):
