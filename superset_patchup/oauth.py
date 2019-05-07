@@ -156,16 +156,15 @@ class CustomSecurityManager(SupersetSecurityManager):
         if provider == "onadata":
             user = (self.appbuilder.sm.oauth_remotes[provider].get(
                 "api/v1/user.json").data)
-            username = user["username"]
 
             user_data = (self.appbuilder.sm.oauth_remotes[provider].get(
-                "api/v1/profiles/{0}.json".format(username)).data)
+                f"api/v1/profiles/{user['username']}.json").data)
 
             return {
                 "name": user_data["name"],
                 "email": user_data["email"],
                 "id": user_data["id"],
-                "username": username,
+                "username": user["username"],
                 "first_name": user_data["first_name"],
                 "last_name": user_data["last_name"],
             }
@@ -190,9 +189,8 @@ class CustomSecurityManager(SupersetSecurityManager):
             reference_data_user_id = reference_user.data["referenceDataUserId"]
             # get user details
             endpoint = f"users/{reference_data_user_id}"
-            user_info = self.appbuilder.sm.oauth_remotes[provider].get(
+            user_data = self.appbuilder.sm.oauth_remotes[provider].get(
                 endpoint).data
-            user_data = user_info
             # get email
             email_endpoint = f"userContactDetails/{reference_data_user_id}"
             email = self.appbuilder.sm.oauth_remotes[provider].get(
