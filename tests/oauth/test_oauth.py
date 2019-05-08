@@ -187,7 +187,7 @@ class TestOauth:
         appbuilder2.sm.oauth_remotes["OpenSRP"].get = request_mock
         csm2 = CustomSecurityManager(appbuilder=appbuilder2)
         user_info2 = csm2.oauth_user_info(provider="OpenSRP")
-        request_mock.assert_called_once_with("api/v1/user.json")
+        request_mock.assert_called_once_with("user-details")
         assert user_info2 == result_info2
 
     def test_oauth_user_info_no_provider(self):
