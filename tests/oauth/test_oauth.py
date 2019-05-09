@@ -150,12 +150,16 @@ class TestOauth:
         Test that we get the right user information
         with the OpenSRP provider
         """
+        # set test configs
+        app.config['PATCHUP_EMAIL_BASE'] = "noreply@example.com"
+
         # Sample data returned OpenSRP
         data = {"userName": "tlv1", "roles": ["Privilege Level: Full"]}
 
         # Expected result
         result_info = {
-            "username": "tlv1",
+            "email": "noreply+tlv1@example.com",
+            "username": "tlv1"
         }
 
         appbuilder = MagicMock()
@@ -176,6 +180,7 @@ class TestOauth:
 
         # Expected result
         result_info2 = {
+            "email": "noreply+mosh@example.com",
             "name": "mosh",
             "username": "mosh"
         }
