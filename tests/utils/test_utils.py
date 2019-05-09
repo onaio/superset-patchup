@@ -1,9 +1,9 @@
 """
 This module tests utils
 """
-from superset_patchup.utils import is_safe_url, get_complex_env_var
-
 from unittest.mock import patch
+
+from superset_patchup.utils import get_complex_env_var, is_safe_url
 
 
 class TestUtils:
@@ -51,7 +51,7 @@ class TestUtils:
         assert params == params_value
 
         # bool variable
-        mock.return_value = 'True'
+        mock.return_value = "True"
         bool_params = get_complex_env_var("PARAMS", default_params)
         assert isinstance(bool_params, bool)
         assert bool_params is True
