@@ -153,6 +153,18 @@ class CustomSecurityManager(SupersetSecurityManager):
     def oauth_user_info(self, provider, response=None):
         """Get user info"""
 
+        # dirty hack.  We need to load the app from here because at the top
+        # of the file superset is not yet initialized with an app property
+        from superset import app
+
+        # this is used for provider's whose users do not have an email address
+        # superset requires an email address and so we need to provide it
+        # the email base should be a string e.g. superset@example.com
+        # we then use it to construct email addresses for the user logging in
+        # that look like superset+username@example.com (if the base was as set
+        # above)
+        email_base = app.config.get('PATCHUP_EMAIL_BASE')
+
         if provider == "onadata":
             user = (self.appbuilder.sm.oauth_remotes[provider].get(
                 "api/v1/user.json").data)
@@ -172,11 +184,16 @@ class CustomSecurityManager(SupersetSecurityManager):
         if provider == "OpenSRP":
             user_object = (self.appbuilder.sm.oauth_remotes[provider].get(
                 "user-details").data)
+            username = user_object["userName"]
 
-            result = {"username": user_object["userName"]}
+            result = {"username": username}
 
             if user_object.get("preferredName"):
                 result["name"] = user_object.get("preferredName")
+
+            if email_base:
+                # change emails from name@xyz.com to name+username@xyz.com
+                result['email'] = email_base.replace("@", f"+{username}@")
 
             return result
 
