@@ -3,13 +3,16 @@ import logging
 import re
 
 from flask import abort, flash, redirect, request
+
 from flask_appbuilder._compat import as_unicode
 from flask_appbuilder.security.sqla import models as ab_models
 from flask_appbuilder.security.views import \
     AuthOAuthView as SupersetAuthOAuthView
 from flask_appbuilder.security.views import expose
-from flask_login import login_user
+
 from superset.security import SupersetSecurityManager
+
+from flask_login import login_user
 
 from superset_patchup.utils import is_safe_url
 
@@ -123,8 +126,8 @@ class CustomSecurityManager(SupersetSecurityManager):
         # of the file superset is not yet initialized with an app property
         from superset import app
 
-        add_custom_roles = app.config.get('ADD_CUSTOM_ROLES', False)
-        custom_roles = app.config.get('CUSTOM_ROLES', {})
+        add_custom_roles = app.config.get("ADD_CUSTOM_ROLES", False)
+        custom_roles = app.config.get("CUSTOM_ROLES", {})
 
         if add_custom_roles is True:
             for role, role_perms in custom_roles.items():
@@ -150,25 +153,53 @@ class CustomSecurityManager(SupersetSecurityManager):
 
     # pylint: disable=method-hidden
     # pylint: disable=unused-argument
+    # pylint: disable=too-many-locals
     def oauth_user_info(self, provider, response=None):
         """Get user info"""
+
+        # dirty hack.  We need to load the app from here because at the top
+        # of the file superset is not yet initialized with an app property
+        from superset import app
+
+        # this is used for provider's whose users do not have an email address
+        # superset requires an email address and so we need to provide it
+        # the email base should be a string e.g. superset@example.com
+        # we then use it to construct email addresses for the user logging in
+        # that look like superset+username@example.com (if the base was as set
+        # above)
+        email_base = app.config.get("PATCHUP_EMAIL_BASE")
 
         if provider == "onadata":
             user = (self.appbuilder.sm.oauth_remotes[provider].get(
                 "api/v1/user.json").data)
-            username = user["username"]
 
             user_data = (self.appbuilder.sm.oauth_remotes[provider].get(
-                "api/v1/profiles/{0}.json".format(username)).data)
+                f"api/v1/profiles/{user['username']}.json").data)
 
             return {
                 "name": user_data["name"],
                 "email": user_data["email"],
                 "id": user_data["id"],
-                "username": username,
+                "username": user["username"],
                 "first_name": user_data["first_name"],
                 "last_name": user_data["last_name"],
             }
+
+        if provider == "OpenSRP":
+            user_object = (self.appbuilder.sm.oauth_remotes[provider].get(
+                "user-details").data)
+            username = user_object["userName"]
+
+            result = {"username": username}
+
+            if user_object.get("preferredName"):
+                result["name"] = user_object.get("preferredName")
+
+            if email_base:
+                # change emails from name@xyz.com to name+username@xyz.com
+                result["email"] = email_base.replace("@", f"+{username}@")
+
+            return result
 
         if provider == "openlmis":
             # get access token
@@ -179,9 +210,8 @@ class CustomSecurityManager(SupersetSecurityManager):
             reference_data_user_id = reference_user.data["referenceDataUserId"]
             # get user details
             endpoint = f"users/{reference_data_user_id}"
-            user_info = self.appbuilder.sm.oauth_remotes[provider].get(
+            user_data = self.appbuilder.sm.oauth_remotes[provider].get(
                 endpoint).data
-            user_data = user_info
             # get email
             email_endpoint = f"userContactDetails/{reference_data_user_id}"
             email = self.appbuilder.sm.oauth_remotes[provider].get(

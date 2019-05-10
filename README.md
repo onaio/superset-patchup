@@ -104,4 +104,21 @@ CUSTOM_ROLES = {
 
 ### Custom oAuth user info methods
 
-Superset-patchup's CustomSecurityManager class includes a custom `oauth_user_info` method that correctly sets user information when a user authenticates with Superset using either the `onadata` or `openlmis` oAuth providers.
+Ketchup's CustomSecurityManager class includes a custom `oauth_user_info` method that correctly sets user information when a user authenticates with Superset using any of the following oAuth providers:
+
+- `onadata`
+- `openlmis`
+- `OpenSRP`
+
+#### PATCHUP_EMAIL_BASE
+
+In cases where an oAuth provider does not provide an email address for its users, Superset's oAuth process might fail.  To remedy this, Superset-patchup you can set the `PATCHUP_EMAIL_BASE` variable in `superset_config.py`.
+
+When this is set, Superset-patchup will try to generate sensible email address for each authenticated user, like so:
+
+```python
+# superset_config.py
+PATCHUP_EMAIL_BASE = "ketchup@example.com"
+```
+
+With this in place, Superset-patchup will assign each user an email in the form of `ketchup+USERNAME@example.com`.  So, for example, if a user named `bobbie` signed in, his email would be set as `ketchup+bobbie@example.com`.
