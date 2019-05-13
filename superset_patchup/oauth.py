@@ -2,16 +2,17 @@
 import logging
 import re
 
-from flask import abort, flash, redirect, request, session, url_for, g
+from flask import abort, flash, g, redirect, request, session, url_for
+
 from flask_appbuilder._compat import as_unicode
 from flask_appbuilder.security.sqla import models as ab_models
 from flask_appbuilder.security.views import \
     AuthOAuthView as SupersetAuthOAuthView
 from flask_appbuilder.security.views import expose
-from flask_login import login_user
-import jwt
+
 from superset.security import SupersetSecurityManager
 
+import jwt
 from flask_login import login_user
 
 from superset_patchup.utils import is_safe_url
