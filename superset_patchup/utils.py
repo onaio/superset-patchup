@@ -52,4 +52,3 @@ def is_valid_provider(user_input, static_provider):
     if not user_input:
         return False
     return user_input.lower() == static_provider.lower()
-    
