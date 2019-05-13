@@ -24,8 +24,9 @@ class AuthOAuthView(SupersetAuthOAuthView):
     @expose("/login/")
     @expose("/login/<provider>")
     @expose("/login/<provider>/<register>")
+    # pylint: disable=logging-fstring-interpolation
     def login(self, provider=None, register=None):
-        logging.debug("Provider: {0}".format(provider))
+        logging.debug(f"Provider: {provider}")
 
         # handle redirect
         redirect_url = self.appbuilder.get_url_for_index
@@ -35,7 +36,7 @@ class AuthOAuthView(SupersetAuthOAuthView):
                 return abort(400)
 
         if g.user is not None and g.user.is_authenticated:
-            logging.debug("Already authenticated {0}".format(g.user))
+            logging.debug(f"Already authenticated {g.user}")
             return redirect(redirect_url)
 
         if provider is None:
@@ -45,37 +46,37 @@ class AuthOAuthView(SupersetAuthOAuthView):
                 title=self.title,
                 appbuilder=self.appbuilder,
             )
-        else:
-            logging.debug("Going to call authorize for: {0}".format(provider))
-            state = jwt.encode(
-                request.args.to_dict(flat=False),
-                self.appbuilder.app.config["SECRET_KEY"],
-                algorithm="HS256",
-            )
-            try:
-                if register:
-                    logging.debug("Login to Register")
-                    session["register"] = True
-                if provider == "twitter":
-                    return self.appbuilder.sm.oauth_remotes[provider].authorize(
-                        callback=url_for(
-                            ".oauth_authorized",
-                            provider=provider,
-                            _external=True,
-                            state=state,
-                        )
-                    )
-                else:
-                    return self.appbuilder.sm.oauth_remotes[provider].authorize(
-                        callback=url_for(
-                            ".oauth_authorized", provider=provider, _external=True
-                        ),
+        logging.debug(f"Going to call authorize for: {provider}")
+        state = jwt.encode(
+            request.args.to_dict(flat=False),
+            self.appbuilder.app.config["SECRET_KEY"],
+            algorithm="HS256",
+        )
+        try:
+            if register:
+                logging.debug("Login to Register")
+                session["register"] = True
+            if provider == "twitter":
+                return self.appbuilder.sm.oauth_remotes[provider].authorize(
+                    callback=url_for(
+                        ".oauth_authorized",
+                        provider=provider,
+                        _external=True,
                         state=state,
                     )
-            except Exception as e:
-                logging.error("Error on OAuth authorize: {0}".format(e))
-                flash(as_unicode(self.invalid_login_message), "warning")
-                return redirect(self.appbuilder.get_url_for_index)
+                )
+            return self.appbuilder.sm.oauth_remotes[provider].authorize(
+                callback=url_for(
+                    ".oauth_authorized",
+                    provider=provider,
+                    _external=True
+                ),
+                state=state,
+            )
+        except Exception as err:  # pylint: disable=broad-except
+            logging.error(f"Error on OAuth authorize: {err}")
+            flash(as_unicode(self.invalid_login_message), "warning")
+            return redirect(self.appbuilder.get_url_for_index)
 
     @expose("/oauth-authorized/<provider>")
     # pylint: disable=too-many-branches
