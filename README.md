@@ -83,6 +83,12 @@ OAUTH_PROVIDERS = [
 CUSTOM_SECURITY_MANAGER = CustomSecurityManager
 ```
 
+As an alternative, you can also simply add a redirect variable to the url so as to redirect after logging in. This can be added as below
+
+```
+'https://example.com/login/provider?redirect=/superset/dashboard/3/'
+```
+
 ### Add custom roles
 
 This feature allows you to add custom roles to Superset on initialization.  This is useful when you want to add custom roles to Superset during an automated deployment.
