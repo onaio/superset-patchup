@@ -3,7 +3,7 @@ This module tests utils
 """
 from unittest.mock import patch
 
-from superset_patchup.utils import get_complex_env_var, is_safe_url
+from superset_patchup.utils import get_complex_env_var, is_safe_url, is_valid_provider
 
 
 class TestUtils:
@@ -55,3 +55,13 @@ class TestUtils:
         bool_params = get_complex_env_var("PARAMS", default_params)
         assert isinstance(bool_params, bool)
         assert bool_params is True
+
+    def test_case_insensitivity_for_provider(self):
+        """
+        Test that provider information form user can be case insesitive,
+        to static standard strings that  they will be checked against
+        """
+        assert is_valid_provider("opensrp", "OpenSRP")
+        assert is_valid_provider("OnaData", 'onadata')
+        assert is_valid_provider("OpenlMis", "openlmis")
+        assert not is_valid_provider("oensrp", "OpenSrp")
