@@ -298,3 +298,30 @@ class TestOauth:
             "onadata", {"access_token": "cZpwCzYjpzuSqzekM"})
         assert mock_login.call_count == 1
         mock_redirect.assert_called_once_with("http://example.com")
+
+    @patch("superset_patchup.oauth.redirect")
+    @patch("superset_patchup.oauth.g")
+    @patch("superset_patchup.oauth.is_safe_url")
+    @patch("superset_patchup.oauth.request.args.get")
+    @patch("superset_patchup.oauth.request")
+    def test_login_redirec(
+            self,
+            mock_request,
+            mock_redirect_arg,
+            mock_safe_url,
+            mock_g,
+            mock_redirect
+    ):
+        """
+        Test that we are redirected to the redirect url when it is passed
+        as an argument to /login
+        """
+        oauth_view = AuthOAuthView()
+        oauth_view.appbuilder = MagicMock()
+
+        mock_redirect_arg.return_value = "/superset/dashboard/3"
+        mock_safe_url.return_value = True
+        mock_g.user.is_authenticated.return_value = True
+
+        oauth_view.login(provider="onadata")
+        mock_redirect.assert_called_once_with("/superset/dashboard/3")
