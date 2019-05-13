@@ -45,6 +45,7 @@ def is_safe_url(target_url):
     return test_url.scheme in ("http",
                                "https") and ref_url.netloc == test_url.netloc
 
+
 def is_valid_provider(user_input, static_provider):
     """
     Validate a user's provider input  irrespectve of case
