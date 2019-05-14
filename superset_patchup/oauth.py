@@ -27,6 +27,7 @@ class AuthOAuthView(SupersetAuthOAuthView):
     @expose("/login/<provider>/<register>")
     # pylint: disable=logging-fstring-interpolation
     def login(self, provider=None, register=None):
+        """The login view from AuthOAuthView"""
         logging.debug(f"Provider: {provider}")
 
         # handle redirect
