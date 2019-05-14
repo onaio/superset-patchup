@@ -1,7 +1,7 @@
 """
 This module tests oauth
 """
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, call
 
 from superset import app
 
@@ -325,3 +325,18 @@ class TestOauth:
 
         oauth_view.login(provider="onadata")
         mock_redirect.assert_called_once_with("/superset/dashboard/3")
+
+    @patch('superset_patchup.oauth.is_valid_provider')
+    def test_is_valid_provider_is_called_for_opendata(self, function_mock):
+        """
+        Test that is_valid_provider function is called for all provider names
+        """
+        function_mock.return_value = False
+        appbuilder = MagicMock()
+        csm = CustomSecurityManager(appbuilder=appbuilder)
+        csm.oauth_user_info(provider="Onadata")
+        assert call("Onadata", "onadata") in function_mock.call_args_list
+        csm.oauth_user_info(provider="opensrp")
+        assert call("opensrp", "OpenSRP") in function_mock.call_args_list
+        csm.oauth_user_info(provider="OPENLMIS")
+        assert call("OPENLMIS", "openlmis") in function_mock.call_args_list

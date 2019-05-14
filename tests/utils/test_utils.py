@@ -1,7 +1,7 @@
 """
 This module tests utils
 """
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import patch, MagicMock
 
 from superset_patchup.utils import get_complex_env_var, is_safe_url, is_valid_provider
 from superset_patchup.oauth import CustomSecurityManager
@@ -66,18 +66,3 @@ class TestUtils:
         assert is_valid_provider("OnaData", 'onadata')
         assert is_valid_provider("OpenlMis", "openlmis")
         assert not is_valid_provider("oensrp", "OpenSrp")
-
-    @patch('superset_patchup.oauth.is_valid_provider')
-    def test_is_valid_provider_is_called_for_opendata(self, function_mock):
-        """
-        Test that is_valid_provider function is called for all provider names
-        """
-        function_mock.return_value = False
-        appbuilder = MagicMock()
-        csm = CustomSecurityManager(appbuilder=appbuilder)
-        csm.oauth_user_info(provider="Onadata")
-        assert call("Onadata", "onadata") in function_mock.call_args_list
-        csm.oauth_user_info(provider="opensrp")
-        assert call("opensrp", "OpenSRP") in function_mock.call_args_list
-        csm.oauth_user_info(provider="OPENLMIS")
-        assert call("OPENLMIS", "openlmis") in function_mock.call_args_list
