@@ -31,8 +31,8 @@ class AuthOAuthView(SupersetAuthOAuthView):
 
         # handle redirect
         redirect_url = self.appbuilder.get_url_for_index
-        if request.args.get('redirect') is not None:
-            redirect_url = request.args.get('redirect')
+        if request.args.get('redirect_url') is not None:
+            redirect_url = request.args.get('redirect_url')
             if not is_safe_url(redirect_url):
                 return abort(400)
 
@@ -77,7 +77,7 @@ class AuthOAuthView(SupersetAuthOAuthView):
         except Exception as err:  # pylint: disable=broad-except
             logging.error(f"Error on OAuth authorize: {err}")
             flash(as_unicode(self.invalid_login_message), "warning")
-            return redirect(self.appbuilder.get_url_for_index)
+            return redirect(redirect_url)
 
     @expose("/oauth-authorized/<provider>")
     # pylint: disable=too-many-branches
