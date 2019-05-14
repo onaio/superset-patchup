@@ -15,7 +15,7 @@ from superset.security import SupersetSecurityManager
 import jwt
 from flask_login import login_user
 
-from superset_patchup.utils import is_safe_url
+from superset_patchup.utils import is_safe_url, is_valid_provider
 
 
 class AuthOAuthView(SupersetAuthOAuthView):
@@ -229,7 +229,7 @@ class CustomSecurityManager(SupersetSecurityManager):
         # above)
         email_base = app.config.get("PATCHUP_EMAIL_BASE")
 
-        if provider == "onadata":
+        if is_valid_provider(provider, "onadata"):
             user = (self.appbuilder.sm.oauth_remotes[provider].get(
                 "api/v1/user.json").data)
 
@@ -245,7 +245,7 @@ class CustomSecurityManager(SupersetSecurityManager):
                 "last_name": user_data["last_name"],
             }
 
-        if provider == "OpenSRP":
+        if is_valid_provider(provider, "OpenSRP"):
             user_object = (self.appbuilder.sm.oauth_remotes[provider].get(
                 "user-details").data)
             username = user_object["userName"]
@@ -261,7 +261,7 @@ class CustomSecurityManager(SupersetSecurityManager):
 
             return result
 
-        if provider == "openlmis":
+        if is_valid_provider(provider, "openlmis"):
             # get access token
             my_token = self.oauth_tokengetter()[0]
             # get referenceDataUserId

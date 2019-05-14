@@ -44,3 +44,13 @@ def is_safe_url(target_url):
     test_url = urlparse(urljoin(request.host_url, target_url))
     return test_url.scheme in ("http",
                                "https") and ref_url.netloc == test_url.netloc
+
+
+def is_valid_provider(user_input: str, static_provider: str) -> bool:
+    """
+    Validate a user's provider input  irrespectve of case
+    """
+    try:
+        return user_input.lower() == static_provider.lower()
+    except AttributeError:
+        return False
