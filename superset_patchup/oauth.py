@@ -2,7 +2,7 @@
 import logging
 import re
 
-from flask import abort, flash, redirect, request
+from flask import abort, flash, g, redirect, request, session, url_for
 
 from flask_appbuilder._compat import as_unicode
 from flask_appbuilder.security.sqla import models as ab_models
@@ -12,6 +12,7 @@ from flask_appbuilder.security.views import expose
 
 from superset.security import SupersetSecurityManager
 
+import jwt
 from flask_login import login_user
 
 from superset_patchup.utils import is_safe_url
@@ -19,6 +20,65 @@ from superset_patchup.utils import is_safe_url
 
 class AuthOAuthView(SupersetAuthOAuthView):
     """ Flask-AppBuilder's Authentication OAuth view"""
+    login_template = "appbuilder/general/security/login_oauth.html"
+
+    @expose("/login/")
+    @expose("/login/<provider>")
+    @expose("/login/<provider>/<register>")
+    # pylint: disable=logging-fstring-interpolation
+    def login(self, provider=None, register=None):
+        """The login view from AuthOAuthView"""
+        logging.debug(f"Provider: {provider}")
+
+        # handle redirect
+        redirect_url = self.appbuilder.get_url_for_index
+        if request.args.get('redirect_url') is not None:
+            redirect_url = request.args.get('redirect_url')
+            if not is_safe_url(redirect_url):
+                return abort(400)
+
+        if g.user is not None and g.user.is_authenticated:
+            logging.debug(f"Already authenticated {g.user}")
+            return redirect(redirect_url)
+
+        if provider is None:
+            return self.render_template(
+                self.login_template,
+                providers=self.appbuilder.sm.oauth_providers,
+                title=self.title,
+                appbuilder=self.appbuilder,
+            )
+        logging.debug(f"Going to call authorize for: {provider}")
+        state = jwt.encode(
+            request.args.to_dict(flat=False),
+            self.appbuilder.app.config["SECRET_KEY"],
+            algorithm="HS256",
+        )
+        try:
+            if register:
+                logging.debug("Login to Register")
+                session["register"] = True
+            if provider == "twitter":
+                return self.appbuilder.sm.oauth_remotes[provider].authorize(
+                    callback=url_for(
+                        ".oauth_authorized",
+                        provider=provider,
+                        _external=True,
+                        state=state,
+                    )
+                )
+            return self.appbuilder.sm.oauth_remotes[provider].authorize(
+                callback=url_for(
+                    ".oauth_authorized",
+                    provider=provider,
+                    _external=True
+                ),
+                state=state,
+            )
+        except Exception as err:  # pylint: disable=broad-except
+            logging.error(f"Error on OAuth authorize: {err}")
+            flash(as_unicode(self.invalid_login_message), "warning")
+            return redirect(redirect_url)
 
     @expose("/oauth-authorized/<provider>")
     # pylint: disable=too-many-branches
