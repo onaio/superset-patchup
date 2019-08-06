@@ -11,6 +11,10 @@ def init_superset_for_testing():
 
 	# DRAGONS: don't import until ya got the home directory sorted
 	import superset
+	import superset_patchup
+
+	# Apply our changes
+	superset_patchup.patch_app(superset.app)
 
 	# Initialize Superset db
 	superset.db.create_all()

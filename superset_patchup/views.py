@@ -57,6 +57,6 @@ class SupersetKetchupApiView(superset.views.base.BaseSupersetView):
 
         return self.json_response(payload)
 
-def add_ketchup_views():
+def patch_views():
     """Hook up the views (*after* other initialization of superset)"""
     superset.appbuilder.add_view_no_menu(SupersetKetchupApiView)
