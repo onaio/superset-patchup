@@ -8,6 +8,7 @@ import superset
 
 from .version import (VERSION, __version__)
 
+
 class SupersetKetchupApiView(superset.views.base.BaseSupersetView):
 
     """
@@ -22,26 +23,36 @@ class SupersetKetchupApiView(superset.views.base.BaseSupersetView):
     @expose('/version/', methods=['GET'])
     def version(self):
         """Returns *superset-api* version"""
-        return self.json_response({'version': VERSION, 'versionStr': __version__})
+        return self.json_response(
+            {'version': VERSION, 'versionStr': __version__})
 
     @superset.views.base.api
     @expose('/all_dashboards/', methods=['GET'])
     def all_dashboards(self):
+
         """
         Extension to allow API access to information *about* dashboards.
         See: /fave_dashboards/, etc.
-        Returns the ids, links, names, and URLs of the dashboards a user has access to.
+        Returns the ids, links, names, and URLs of the dashboards a user has
+        access to.
         """
 
         dashboards = superset.db.session.query(
             superset.models.core.Dashboard)
 
-        # Query only dashboards where we have at least some access - note that this exact query
-        # filter is used in the core Superset view to prune visible dashboards.
-        # Logic is basically "dashboard owned by user or at least one slice accessible by user"
-        # See: https://github.com/apache/incubator-superset/blob/0.27/superset/views/core.py#L154
-        dashboards = superset.views.core.DashboardFilter(
-            'slice', SQLAInterface(superset.models.core.Dashboard)).apply(dashboards, lambda: None)
+        # Query only dashboards where we have at least some access - note that
+        # this exact query filter is used in the core Superset view to prune
+        # visible dashboards.
+        # Logic is basically "dashboard owned by user or at least one slice
+        # accessible by user"
+        # See: https://github.com/apache/incubator-superset/blob/0.27/
+        # superset/views/core.py#L154
+        view_filter = \
+            superset.views.core.DashboardFilter(
+                'slice',
+                SQLAInterface(superset.models.core.Dashboard))
+
+        dashboards = view_filter.apply(dashboards, lambda: None)
 
         payload = []
         for dashboard in dashboards:
@@ -56,6 +67,7 @@ class SupersetKetchupApiView(superset.views.base.BaseSupersetView):
             payload.append(value)
 
         return self.json_response(payload)
+
 
 def patch_views():
     """Hook up the views (*after* other initialization of superset)"""

@@ -12,6 +12,7 @@ from future.standard_library import hooks
 with hooks():
     from urllib.parse import urlparse, urljoin
 
+
 def get_complex_env_var(env_var, default):
     """
     Gets the value of a "complex" environment variable
