@@ -1,12 +1,10 @@
 import json
 import celery
 import superset
-from superset_patchup.views import SupersetKetchupApiView
 from .. import helpers
 
 #superset.app.config['SQLALCHEMY_ECHO'] = True
 logger = celery.utils.log.get_task_logger(__name__)
-
 
 class TestApiViews:
 

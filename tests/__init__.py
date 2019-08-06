@@ -24,5 +24,4 @@ def init_superset_for_testing():
 	    'test_user', 'Test', 'User', 'test@user.org', test_role, password='password')
 	superset.security_manager.get_session.commit()
 
-
 init_superset_for_testing()

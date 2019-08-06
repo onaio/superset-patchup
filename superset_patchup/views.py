@@ -2,12 +2,11 @@
 Additional extensions to SuperSet views
 """
 
-import json
 from flask_appbuilder import expose
 from flask_appbuilder.models.sqla.interface import SQLAInterface
 import superset
 
-from . import (VERSION, __version__)
+from .version import (VERSION, __version__)
 
 class SupersetKetchupApiView(superset.views.base.BaseSupersetView):
 
@@ -17,12 +16,13 @@ class SupersetKetchupApiView(superset.views.base.BaseSupersetView):
 
     def __init__(self):
         self.route_base = "/superset-ketchup/api"
+        super().__init__()
 
     @superset.views.base.api
     @expose('/version/', methods=['GET'])
     def version(self):
         """Returns *superset-api* version"""
-        return self.json_response({ 'version': VERSION, 'versionStr': __version__ })
+        return self.json_response({'version': VERSION, 'versionStr': __version__})
 
     @superset.views.base.api
     @expose('/all_dashboards/', methods=['GET'])
@@ -40,8 +40,8 @@ class SupersetKetchupApiView(superset.views.base.BaseSupersetView):
         # filter is used in the core Superset view to prune visible dashboards.
         # Logic is basically "dashboard owned by user or at least one slice accessible by user"
         # See: https://github.com/apache/incubator-superset/blob/0.27/superset/views/core.py#L154
-        dashboards = (superset.views.core.DashboardFilter('slice',
-        	SQLAInterface(superset.models.core.Dashboard)).apply(dashboards, lambda: None))
+        dashboards = superset.views.core.DashboardFilter(
+            'slice', SQLAInterface(superset.models.core.Dashboard)).apply(dashboards, lambda: None)
 
         payload = []
         for dashboard in dashboards:
@@ -57,5 +57,6 @@ class SupersetKetchupApiView(superset.views.base.BaseSupersetView):
 
         return self.json_response(payload)
 
-# Hook up the view
-superset.appbuilder.add_view_no_menu(SupersetKetchupApiView)
+def add_ketchup_views():
+    """Hook up the views (*after* other initialization of superset)"""
+    superset.appbuilder.add_view_no_menu(SupersetKetchupApiView)

@@ -1,6 +1,7 @@
 import flask_login
 from flask_appbuilder import expose
 import superset
+import superset_patchup
 
 class TestView(superset.views.base.BaseSupersetView):
 
@@ -33,5 +34,7 @@ class TestView(superset.views.base.BaseSupersetView):
         """Test logout"""
         flask_login.logout_user()
 
-
+# Add test views
 superset.appbuilder.add_view_no_menu(TestView)
+# Add patchup views
+superset_patchup.views.add_ketchup_views()

@@ -1,5 +1,6 @@
 """
 Main init file for superset_patchup
 """
-VERSION = (0, 1, 5)
-__version__ = ".".join(str(v) for v in VERSION)
+from . import oauth
+from . import views
+from .version import (VERSION, __version__)
