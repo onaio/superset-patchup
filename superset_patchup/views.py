@@ -69,6 +69,8 @@ class SupersetKetchupApiView(superset.views.base.BaseSupersetView):
         return self.json_response(payload)
 
 
-def patch_views():
+# pylint: disable=unused-argument
+def add_ketchup_views(superset_app):
     """Hook up the views (*after* other initialization of superset)"""
+    # NOTE: Is there a way to get the superset instance from the app obj?
     superset.appbuilder.add_view_no_menu(SupersetKetchupApiView)

@@ -1,20 +1,17 @@
 import os
 import shutil
 
-SUPERSET_TEST_HOME = os.path.join(os.path.dirname(__file__), '.superset')
-shutil.rmtree(SUPERSET_TEST_HOME, ignore_errors=True)
-os.environ['SUPERSET_HOME'] = SUPERSET_TEST_HOME
-
 def init_superset_for_testing():
 
 	"""Basic initialization for all tests"""
 
-	# DRAGONS: don't import until ya got the home directory sorted
-	import superset
-	import superset_patchup
+	SUPERSET_TEST_HOME = os.path.join(os.path.dirname(__file__), '.superset')
+	shutil.rmtree(SUPERSET_TEST_HOME, ignore_errors=True)
+	os.environ['SUPERSET_HOME'] = SUPERSET_TEST_HOME
+	os.environ['SUPERSET_CONFIG'] = 'tests.config.KETCHUP_CONFIG'
 
-	# Apply our changes
-	superset_patchup.patch_app(superset.app)
+	# DRAGONS: don't import until ya got the home directory and config sorted
+	import superset
 
 	# Initialize Superset db
 	superset.db.create_all()
