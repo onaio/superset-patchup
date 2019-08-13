@@ -2,7 +2,7 @@
 import logging
 import re
 
-from flask import abort, flash, g, redirect, request, session, url_for
+from flask import abort, flash, g, redirect, request, session, url_for, jsonify, make_response
 
 from flask_appbuilder._compat import as_unicode
 from flask_appbuilder.security.sqla import models as ab_models
@@ -49,11 +49,7 @@ class AuthOAuthView(SupersetAuthOAuthView):
                 appbuilder=self.appbuilder,
             )
         logging.debug(f"Going to call authorize for: {provider}")
-        state = jwt.encode(
-            request.args.to_dict(flat=False),
-            self.appbuilder.app.config["SECRET_KEY"],
-            algorithm="HS256",
-        )
+        state = self.generateState()
         try:
             if register:
                 logging.debug("Login to Register")
@@ -79,6 +75,32 @@ class AuthOAuthView(SupersetAuthOAuthView):
             logging.error(f"Error on OAuth authorize: {err}")
             flash(as_unicode(self.invalid_login_message), "warning")
             return redirect(redirect_url)
+
+    @expose("/oauth-init/<provider>")
+    def login_init(self, provider=None):
+        logging.debug(f"Provider: {provider}")
+
+        if g.user is not None and g.user.is_authenticated:
+            logging.debug(f"Provider {provider} is already authenticated by {g.user}")
+            return make_response(jsonify(
+                isAuthorized=True
+            ))
+
+        redirect_url = request.args.get("redirect_url")
+        if not redirect_url or not is_safe_url(redirect_url):
+            logging.debug(f"The arg redirect_url not found or not safe")
+            return abort(400)
+
+        logging.debug(f"Initialization of authorization process for: {provider}")
+
+        # libraries assume that 'redirect_url' should be available in the session
+        session['%s_oauthredir' % provider] = redirect_url
+
+        state = self.generateState()
+        return make_response(jsonify(
+            isAuthorized=False,
+            state=state
+        ))
 
     @expose("/oauth-authorized/<provider>")
     # pylint: disable=too-many-branches
@@ -141,6 +163,12 @@ class AuthOAuthView(SupersetAuthOAuthView):
 
         return redirect(self.appbuilder.get_url_for_index)
 
+    def generateState(self):
+        return jwt.encode(
+            request.args.to_dict(flat=False),
+            self.appbuilder.app.config["SECRET_KEY"],
+            algorithm="HS256",
+        )
 
 class CustomSecurityManager(SupersetSecurityManager):
     """Custom Security Manager Class"""
