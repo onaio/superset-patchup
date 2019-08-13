@@ -122,8 +122,8 @@ def grant_slice_access_to_role(role, slyce):
 def grant_obj_permission_to_role(role, obj, permission):
 
     """
-    Does the extremely confusing steps required to add permission for a role
-    to an object.
+    Does the extremely confusing steps required to add permission for an object
+    to a role.
     """
 
     superset.security_manager.merge_perm(permission, obj.perm)
@@ -140,6 +140,20 @@ def grant_obj_permission_to_role(role, obj, permission):
 
     return grant
 
+def grant_api_permission_to_role(role, api_clazz, api_method):
+
+    """
+    Does the extremely confusing steps required to add api view permission to
+    a role.
+    """
+
+    grant = superset.security_manager.find_permission_view_menu(
+        view_menu_name=api_clazz.name,
+        permission_name="can_%s%" % api_method,
+    )
+
+    role.permissions.append(grant)
+    superset.security_manager.get_session.commit()
 
 def add_owner_to_dashboard(dashboard, user):
     dashboard.owners.append(user)

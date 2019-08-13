@@ -3,6 +3,7 @@ Additional extensions to SuperSet views
 """
 
 from flask_appbuilder import expose
+from flask_appbuilder.security.decorators import has_access_api
 from flask_appbuilder.models.sqla.interface import SQLAInterface
 import superset
 
@@ -22,11 +23,12 @@ class SupersetKetchupApiView(superset.views.base.BaseSupersetView):
     @superset.views.base.api
     @expose('/version/', methods=['GET'])
     def version(self):
-        """Returns *superset-api* version"""
+        """Returns *superset-patchup* api version"""
         return self.json_response(
             {'version': VERSION, 'versionStr': __version__})
 
     @superset.views.base.api
+    @has_access_api
     @expose('/all_dashboards/', methods=['GET'])
     def all_dashboards(self):
 

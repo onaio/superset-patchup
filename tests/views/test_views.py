@@ -3,12 +3,18 @@ import celery
 import superset
 from .. import helpers
 
+from superset_patchup.views import SupersetKetchupApiView
+
 #superset.app.config['SQLALCHEMY_ECHO'] = True
 logger = celery.utils.log.get_task_logger(__name__)
 
 class TestApiViews:
 
     """Tests of -ketchup API extensions"""
+
+    def __init__(self):
+        test_role = superset.security_manager.find_role('test_role')
+        helpers.grant_api_permission_to_role(test_role, SupersetKetchupApiView, 'all_dashboards')
 
     def setup_method(self, method):
         helpers.cleanup_data()
