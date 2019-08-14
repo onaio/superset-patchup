@@ -49,7 +49,7 @@ class AuthOAuthView(SupersetAuthOAuthView):
                 appbuilder=self.appbuilder,
             )
         logging.debug(f"Going to call authorize for: {provider}")
-        state = self.generateState()
+        state = self.generate_state()
         try:
             if register:
                 logging.debug("Login to Register")
@@ -78,6 +78,7 @@ class AuthOAuthView(SupersetAuthOAuthView):
 
     @expose("/oauth-init/<provider>")
     def login_init(self, provider=None):
+        """Checks authorization and if a user has not authenticated, inits the sign-in process and returns a state"""
         logging.debug(f"Provider: {provider}")
 
         if g.user is not None and g.user.is_authenticated:
@@ -96,7 +97,7 @@ class AuthOAuthView(SupersetAuthOAuthView):
         # libraries assume that 'redirect_url' should be available in the session
         session['%s_oauthredir' % provider] = redirect_url
 
-        state = self.generateState()
+        state = self.generate_state()
         return make_response(jsonify(
             isAuthorized=False,
             state=state
@@ -163,7 +164,8 @@ class AuthOAuthView(SupersetAuthOAuthView):
 
         return redirect(self.appbuilder.get_url_for_index)
 
-    def generateState(self):
+    def generate_state(self):
+        """Generates a state which is required during the OAuth sign-in process"""
         return jwt.encode(
             request.args.to_dict(flat=False),
             self.appbuilder.app.config["SECRET_KEY"],

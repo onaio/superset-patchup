@@ -1,7 +1,7 @@
 """
 This module tests oauth
 """
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch, call, PropertyMock
 
 from superset import app
 
@@ -340,3 +340,86 @@ class TestOauth:
         assert call("opensrp", "OpenSRP") in function_mock.call_args_list
         csm.oauth_user_info(provider="OPENLMIS")
         assert call("OPENLMIS", "openlmis") in function_mock.call_args_list
+
+    @patch("superset_patchup.oauth.jwt")
+    @patch("superset_patchup.oauth.jsonify")
+    @patch("superset_patchup.oauth.make_response")
+    @patch("superset_patchup.oauth.g")
+    @patch("superset_patchup.oauth.is_safe_url")
+    @patch("superset_patchup.oauth.request.args.get")
+    @patch("superset_patchup.oauth.request")
+    def test_init_login_result_for_not_authorized_user(
+            self,
+            mock_request,
+            mock_redirect_arg,
+            mock_safe_url,
+            mock_g,
+            mock_make_response,
+            mock_jsonify,
+            mock_jwt
+    ):
+        """
+        Test that checks if the correct response for a not authorized user is returned.
+        """
+        oauth_view = AuthOAuthView()
+        oauth_view.appbuilder = MagicMock()
+
+        provider = "OPENLMIS"
+        redirect_url = "/superset/dashboard/3"
+        state = '12345'
+
+        with patch('superset_patchup.oauth.g.user.is_authenticated', False):
+            with patch("superset_patchup.oauth.session", dict()) as session:
+                mock_redirect_arg.return_value = redirect_url
+                mock_jwt.encode.return_value = state
+
+                oauth_view.login_init(provider=provider)
+
+                mock_make_response.assert_called()
+                assert call(isAuthorized=False, state=state) in mock_jsonify.call_args_list
+                assert session.get('%s_oauthredir' % provider) == redirect_url
+
+    @patch("superset_patchup.oauth.jsonify")
+    @patch("superset_patchup.oauth.make_response")
+    @patch("superset_patchup.oauth.g")
+    def test_init_login_result_for_already_authorized_user(
+            self,
+            mock_g,
+            mock_make_response,
+            mock_jsonify
+    ):
+        """
+        Test that checks if the correct response for an already authorized user is returned.
+        """
+        oauth_view = AuthOAuthView()
+        oauth_view.appbuilder = MagicMock()
+        provider = "OPENLMIS"
+
+        with patch('superset_patchup.oauth.g.user.is_authenticated', True):
+            with patch("superset_patchup.oauth.session", dict()) as session:
+
+                oauth_view.login_init(provider=provider)
+
+                mock_make_response.assert_called()
+                assert call(isAuthorized=True) in mock_jsonify.call_args_list
+                assert (('%s_oauthredir' % provider) in session) is False
+
+    @patch("superset_patchup.oauth.request")
+    def test_generate_state_result(
+            self,
+            mock_request,
+    ):
+        """
+        Test that checks if a valid state is returned.
+        """
+        oauth_view = AuthOAuthView()
+        oauth_view.appbuilder = MagicMock()
+        app_config = dict(SECRET_KEY='secret_key')
+        request_args = dict(dummy_parameter='dummy_parameter_value')
+
+        type(oauth_view.appbuilder.app).config = PropertyMock(return_value=app_config)
+        mock_request.args.to_dict.return_value = request_args
+
+        state = oauth_view.generate_state()
+
+        assert len(state) > 0
