@@ -2,7 +2,8 @@
 import logging
 import re
 
-from flask import abort, flash, g, redirect, request, session, url_for
+from flask import abort, flash, g, redirect, request, session, url_for, \
+    jsonify, make_response
 
 from flask_appbuilder._compat import as_unicode
 from flask_appbuilder.security.sqla import models as ab_models
@@ -49,11 +50,7 @@ class AuthOAuthView(SupersetAuthOAuthView):
                 appbuilder=self.appbuilder,
             )
         logging.debug(f"Going to call authorize for: {provider}")
-        state = jwt.encode(
-            request.args.to_dict(flat=False),
-            self.appbuilder.app.config["SECRET_KEY"],
-            algorithm="HS256",
-        )
+        state = self.generate_state()
         try:
             if register:
                 logging.debug("Login to Register")
@@ -79,6 +76,39 @@ class AuthOAuthView(SupersetAuthOAuthView):
             logging.error(f"Error on OAuth authorize: {err}")
             flash(as_unicode(self.invalid_login_message), "warning")
             return redirect(redirect_url)
+
+    @expose("/oauth-init/<provider>")
+    def login_init(self, provider=None):
+        """
+        Checks authorization and if a user is not authorized,
+        inits the sign-in process and returns a state
+        """
+        logging.debug("Provider: %s", provider)
+
+        if g.user is not None and g.user.is_authenticated:
+            logging.debug("Provider %s is already authorized by %s",
+                          provider, g.user)
+            return make_response(jsonify(
+                isAuthorized=True
+            ))
+
+        redirect_url = request.args.get("redirect_url")
+        if not redirect_url or not is_safe_url(redirect_url):
+            logging.debug("The arg redirect_url not found or not safe")
+            return abort(400)
+
+        logging.debug("Initialization of authorization process for: %s",
+                      provider)
+
+        # libraries assume that
+        # 'redirect_url' should be available in the session
+        session['%s_oauthredir' % provider] = redirect_url
+
+        state = self.generate_state()
+        return make_response(jsonify(
+            isAuthorized=False,
+            state=state
+        ))
 
     @expose("/oauth-authorized/<provider>")
     # pylint: disable=too-many-branches
@@ -140,6 +170,16 @@ class AuthOAuthView(SupersetAuthOAuthView):
             return redirect(redirect_url)
 
         return redirect(self.appbuilder.get_url_for_index)
+
+    def generate_state(self):
+        """
+        Generates a state which is required during the OAuth sign-in process
+        """
+        return jwt.encode(
+            request.args.to_dict(flat=False),
+            self.appbuilder.app.config["SECRET_KEY"],
+            algorithm="HS256",
+        )
 
 
 class CustomSecurityManager(SupersetSecurityManager):

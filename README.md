@@ -116,6 +116,13 @@ Ketchup's CustomSecurityManager class includes a custom `oauth_user_info` method
 - `openlmis`
 - `OpenSRP`
 
+### Custom oAuth init endpoint
+
+One of the ideas of integration Superset with an external service (eg. OpenLMIS) is to allow running the application and sign-in directly from the external application's API. To simplify the whole process, Ketchup provides the endpoint `/oauth-init/<provider>`. It is a backend functionality that essentially does what the endpoint `/login/<provider>` does, however it doesn't redirect a client. Instead of it, it returns information in the JSON form which contains the following fields:
+
+- `isAuthorized` - the flag which provides information about user's authorization in the app
+- `state` - oAuth state which is required during the oAuth sign-in process. It is provided only if `isAuthorized` is false
+
 #### PATCHUP_EMAIL_BASE
 
 In cases where an oAuth provider does not provide an email address for its users, Superset's oAuth process might fail.  To remedy this, Superset-patchup you can set the `PATCHUP_EMAIL_BASE` variable in `superset_config.py`.
