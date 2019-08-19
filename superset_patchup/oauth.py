@@ -2,7 +2,8 @@
 import logging
 import re
 
-from flask import abort, flash, g, redirect, request, session, url_for, jsonify, make_response
+from flask import abort, flash, g, redirect, request, session, url_for, \
+    jsonify, make_response
 
 from flask_appbuilder._compat import as_unicode
 from flask_appbuilder.security.sqla import models as ab_models
@@ -78,23 +79,29 @@ class AuthOAuthView(SupersetAuthOAuthView):
 
     @expose("/oauth-init/<provider>")
     def login_init(self, provider=None):
-        """Checks authorization and if a user has not authenticated, inits the sign-in process and returns a state"""
-        logging.debug(f"Provider: {provider}")
+        """
+        Checks authorization and if a user is not authorized,
+        inits the sign-in process and returns a state
+        """
+        logging.debug("Provider: %s", provider)
 
         if g.user is not None and g.user.is_authenticated:
-            logging.debug(f"Provider {provider} is already authenticated by {g.user}")
+            logging.debug("Provider %s is already authorized by %s",
+                          provider, g.user)
             return make_response(jsonify(
                 isAuthorized=True
             ))
 
         redirect_url = request.args.get("redirect_url")
         if not redirect_url or not is_safe_url(redirect_url):
-            logging.debug(f"The arg redirect_url not found or not safe")
+            logging.debug("The arg redirect_url not found or not safe")
             return abort(400)
 
-        logging.debug(f"Initialization of authorization process for: {provider}")
+        logging.debug("Initialization of authorization process for: %s",
+                      provider)
 
-        # libraries assume that 'redirect_url' should be available in the session
+        # libraries assume that
+        # 'redirect_url' should be available in the session
         session['%s_oauthredir' % provider] = redirect_url
 
         state = self.generate_state()
@@ -165,12 +172,15 @@ class AuthOAuthView(SupersetAuthOAuthView):
         return redirect(self.appbuilder.get_url_for_index)
 
     def generate_state(self):
-        """Generates a state which is required during the OAuth sign-in process"""
+        """
+        Generates a state which is required during the OAuth sign-in process
+        """
         return jwt.encode(
             request.args.to_dict(flat=False),
             self.appbuilder.app.config["SECRET_KEY"],
             algorithm="HS256",
         )
+
 
 class CustomSecurityManager(SupersetSecurityManager):
     """Custom Security Manager Class"""
