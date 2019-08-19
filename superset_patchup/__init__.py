@@ -1,5 +1,5 @@
 """
 Main init file for superset_patchup
 """
-VERSION = (0, 1, 4)
+VERSION = (0, 1, 5)
 __version__ = ".".join(str(v) for v in VERSION)
