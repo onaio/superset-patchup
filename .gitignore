@@ -108,3 +108,7 @@ tests/.superset/
 
 # vscode
 .vscode/
+
+# Sublime
+*.sublime-project
+*.sublime-workspace
