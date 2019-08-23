@@ -141,7 +141,7 @@ There are cases where you simply want a list of all the dashboards that are avai
 
 To get the dashboard list you would need to make a `GET` request to `/superset-ketchup/api/all_dashboards/` and the response will be something like
 
-```
+```json
 [
     {
         "id": 1,
