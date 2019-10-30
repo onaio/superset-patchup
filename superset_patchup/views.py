@@ -5,7 +5,7 @@ Additional extensions to SuperSet views
 from flask_appbuilder import expose
 from flask_appbuilder.security.decorators import has_access_api
 from flask_appbuilder.models.sqla.interface import SQLAInterface
-import superset
+import superset.views
 
 from .version import (VERSION, __version__)
 
