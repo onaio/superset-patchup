@@ -199,9 +199,10 @@ class CustomSecurityManager(SupersetSecurityManager):
         Checks if the permission should be granted or not for the custom role
         returns a boolean value
         """
-        return not (self.is_user_defined_permission(pvm)
-                    or self.is_admin_only(pvm) or self.is_alpha_only(pvm)) or (
-                        self.is_custom_defined_permission(pvm, role_perms))
+        return (not (self._is_user_defined_permission(pvm)
+                     or self._is_admin_only(pvm)
+                     or self._is_alpha_only(pvm))
+                or (self.is_custom_defined_permission(pvm, role_perms)))
 
     def set_custom_role(self, role_name, pvm_check, role_perms):
         """
@@ -224,7 +225,7 @@ class CustomSecurityManager(SupersetSecurityManager):
 
         # dirty hack.  We need to load the app from here because at the top
         # of the file superset is not yet initialized with an app property
-        from superset import app
+        from superset import app  # pylint: disable=import-outside-toplevel
 
         add_custom_roles = app.config.get("ADD_CUSTOM_ROLES", False)
         custom_roles = app.config.get("CUSTOM_ROLES", {})
@@ -259,7 +260,7 @@ class CustomSecurityManager(SupersetSecurityManager):
 
         # dirty hack.  We need to load the app from here because at the top
         # of the file superset is not yet initialized with an app property
-        from superset import app
+        from superset import app  # pylint: disable=import-outside-toplevel
 
         # this is used for provider's whose users do not have an email address
         # superset requires an email address and so we need to provide it

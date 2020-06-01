@@ -8,7 +8,7 @@ Generally the flow for patching superset is intended to be:
 3) Superset finishes initting
   3a) app instrumented with add_ketchup_post
 """
-from .version import (VERSION, __version__) # noqa
+from .version import (VERSION, __version__)  # noqa
 
 
 def add_ketchup(superset_config, ketchup_security=True, ketchup_views=True):
@@ -24,7 +24,7 @@ def add_ketchup(superset_config, ketchup_security=True, ketchup_views=True):
 
         # DRAGONS - import here because packaging script must have minimal
         # default dependencies
-        from . import oauth
+        from . import oauth  # pylint: disable=import-outside-toplevel
 
         superset_config.CUSTOM_SECURITY_MANAGER = oauth.CustomSecurityManager
 
@@ -36,7 +36,7 @@ def add_ketchup(superset_config, ketchup_security=True, ketchup_views=True):
 
             # DRAGONS - import here, because superset must be initialized
             # to use superset.views
-            from . import views
+            from . import views  # pylint: disable=import-outside-toplevel
 
             views.add_ketchup_views(superset_app)
 

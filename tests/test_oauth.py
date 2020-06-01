@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This module tests oauth
 """
@@ -7,13 +8,16 @@ from superset import app
 
 from superset_patchup.oauth import AuthOAuthView, CustomSecurityManager
 
+from .base_tests import SupersetTestCase
 
-class TestOauth:
+
+class TestOauth(SupersetTestCase):
     """
     Class to test the oauth module
     """
-
-    def test_get_oauth_redirect_url_when_not_set(self):
+    def test_get_oauth_redirect_url_when_not_set(
+            self
+    ):  # pylint: disable=R0201
         """
         Test that when custom_redirect_url key is not set in the provider
         None is returned
@@ -24,7 +28,7 @@ class TestOauth:
         redirect_url = csm.get_oauth_redirect_url(provider="onadata")
         assert redirect_url is None
 
-    def test_get_oauth_redirect_url_when_set(self):
+    def test_get_oauth_redirect_url_when_set(self):  # pylint: disable=R0201
         """
         Test that when custom_redirect_url key is set in the provider
         it returns the right value
@@ -40,7 +44,7 @@ class TestOauth:
         redirect_url = csm.get_oauth_redirect_url(provider="onadata")
         assert redirect_url == "http://google.com"
 
-    def test_oauth_user_info_onadata_provider(self):
+    def test_oauth_user_info_onadata_provider(self):  # pylint: disable=R0201
         """
         Test that we get the right user information
         with the onadata provider
@@ -82,7 +86,7 @@ class TestOauth:
         assert userprofile_call[0] == "api/v1/profiles/testauth.json"
         assert user_info == result_info
 
-    def test_oauth_user_info_openlmis_provider(self):
+    def test_oauth_user_info_openlmis_provider(self):  # pylint: disable=R0201
         """
         Test that we get the right user information
         with the openlmis provider
@@ -145,7 +149,7 @@ class TestOauth:
 
         assert user_info == result_info
 
-    def test_oauth_user_info_opensrp_provider(self):
+    def test_oauth_user_info_opensrp_provider(self):  # pylint: disable=R0201
         """
         Test that we get the right user information
         with the OpenSRP provider
@@ -192,7 +196,7 @@ class TestOauth:
         request_mock.assert_called_once_with("user-details")
         assert user_info2 == result_info2
 
-    def test_oauth_user_info_no_provider(self):
+    def test_oauth_user_info_no_provider(self):  # pylint: disable=R0201
         """
         Test that when no provider is provided
         None is returned
@@ -218,7 +222,7 @@ class TestOauth:
             mock_create_missing_perms,  # pylint: disable=unused-argument
             mock_get_session,  # pylint: disable=unused-argument
             mock_clean_perms,
-    ):
+    ):  # pylint: disable=R0201,R0913
         """
         Test that when add custom roles is set to true, the roles specified
         in the configs are created
@@ -251,7 +255,7 @@ class TestOauth:
             mock_request_redirect,
             mock_safe_url,
             mock_redirect,
-    ):
+    ):  # pylint: disable=R0201,R0913
         """
         This test checks that
         1. The access token is used when passed in the request header
@@ -311,7 +315,7 @@ class TestOauth:
             mock_safe_url,
             mock_g,
             mock_redirect
-    ):
+    ):  # pylint: disable=R0201,R0913,W0613
         """
         Test that we are redirected to the redirect url when it is passed
         as an argument to /login
@@ -327,7 +331,9 @@ class TestOauth:
         mock_redirect.assert_called_once_with("/superset/dashboard/3")
 
     @patch('superset_patchup.oauth.is_valid_provider')
-    def test_is_valid_provider_is_called_for_opendata(self, function_mock):
+    def test_is_valid_provider_is_called_for_opendata(
+            self, function_mock
+    ):  # pylint: disable=R0201
         """
         Test that is_valid_provider function is called for all provider names
         """
@@ -357,9 +363,10 @@ class TestOauth:
             mock_make_response,
             mock_jsonify,
             mock_jwt
-    ):
+    ):  # pylint: disable=R0201,R0913,W0613
         """
-        Test that checks if the correct response for a not authorized user is returned.
+        Test that checks if the correct response for a not authorized user
+        is returned.
         """
         oauth_view = AuthOAuthView()
         oauth_view.appbuilder = MagicMock()
@@ -376,7 +383,8 @@ class TestOauth:
                 oauth_view.login_init(provider=provider)
 
                 mock_make_response.assert_called()
-                assert call(isAuthorized=False, state=state) in mock_jsonify.call_args_list
+                assert (call(isAuthorized=False, state=state) in
+                        mock_jsonify.call_args_list)
                 assert session.get('%s_oauthredir' % provider) == redirect_url
 
     @patch("superset_patchup.oauth.jsonify")
@@ -387,9 +395,10 @@ class TestOauth:
             mock_g,
             mock_make_response,
             mock_jsonify
-    ):
+    ):  # pylint: disable=R0201,W0613
         """
-        Test that checks if the correct response for an already authorized user is returned.
+        Test that checks if the correct response for an already authorized
+        user is returned.
         """
         oauth_view = AuthOAuthView()
         oauth_view.appbuilder = MagicMock()
@@ -408,7 +417,7 @@ class TestOauth:
     def test_generate_state_result(
             self,
             mock_request,
-    ):
+    ):  # pylint: disable=R0201
         """
         Test that checks if a valid state is returned.
         """
@@ -417,7 +426,8 @@ class TestOauth:
         app_config = dict(SECRET_KEY='secret_key')
         request_args = dict(dummy_parameter='dummy_parameter_value')
 
-        type(oauth_view.appbuilder.app).config = PropertyMock(return_value=app_config)
+        type(oauth_view.appbuilder.app).config = \
+            PropertyMock(return_value=app_config)
         mock_request.args.to_dict.return_value = request_args
 
         state = oauth_view.generate_state()
