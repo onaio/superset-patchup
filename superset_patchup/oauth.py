@@ -122,7 +122,7 @@ class AuthOAuthView(SupersetAuthOAuthView):
             resp = {"access_token": request.headers.get("Custom-Api-Token")}
         if resp is None:
             flash("You denied the request to sign in.", "warning")
-            return redirect("login")
+            return redirect("/login")
 
         logging.debug(f"OAUTH Authorized resp: {resp}")
 
@@ -145,14 +145,14 @@ class AuthOAuthView(SupersetAuthOAuthView):
                         break
                 if not allow:
                     flash("You are not authorized.", "warning")
-                    return redirect("login")
+                    return redirect("/login")
             else:
                 logging.debug("No whitelist for OAuth provider")
             user = self.appbuilder.sm.auth_user_oauth(userinfo)
 
         if user is None:
             flash(as_unicode(self.invalid_login_message), "warning")
-            return redirect("login")
+            return redirect("/login")
         login_user(user)
 
         # handle custom redirection
