@@ -192,6 +192,21 @@ class TestOauth:
         request_mock.assert_called_once_with("user-details")
         assert user_info2 == result_info2
 
+        # Sample data returned OpenSRP v2
+        data3 = {"username": "mosh", "roles": ["Privilege Level: Full"]}
+
+        # Expected result
+        result_info3 = {"email": "noreply+mosh@example.com", "username": "mosh"}
+
+        appbuilder3 = MagicMock()
+        user_mock3 = MagicMock()
+        user_mock3.data = data3
+        appbuilder3.sm.oauth_remotes["OpenSRP"].get = MagicMock(
+            side_effect=[user_mock3])
+        csm3 = CustomSecurityManager(appbuilder=appbuilder3)
+        user_info3 = csm3.oauth_user_info(provider="OpenSRP")
+        assert user_info3 == result_info3
+
     def test_oauth_user_info_no_provider(self):
         """
         Test that when no provider is provided
