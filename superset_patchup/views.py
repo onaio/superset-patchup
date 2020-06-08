@@ -50,7 +50,7 @@ class SupersetKetchupApiView(superset.views.base.BaseSupersetView):
         # See: https://github.com/apache/incubator-superset/blob/0.27/
         # superset/views/core.py#L154
         view_filter = \
-            superset.views.core.DashboardFilter(
+            superset.views.dashboard.filters.DashboardFilter(
                 'slice',
                 SQLAInterface(superset.models.core.Dashboard))
 
