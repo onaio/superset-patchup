@@ -15,9 +15,8 @@ class TestOauth(SupersetTestCase):
     """
     Class to test the oauth module
     """
-    def test_get_oauth_redirect_url_when_not_set(
-            self
-    ):  # pylint: disable=R0201
+
+    def test_get_oauth_redirect_url_when_not_set(self):  # pylint: disable=R0201
         """
         Test that when custom_redirect_url key is not set in the provider
         None is returned
@@ -34,12 +33,9 @@ class TestOauth(SupersetTestCase):
         it returns the right value
         """
         appbuilder = MagicMock()
-        CustomSecurityManager.oauth_providers = [{
-            "name":
-            "onadata",
-            "custom_redirect_url":
-            "http://google.com"
-        }]
+        CustomSecurityManager.oauth_providers = [
+            {"name": "onadata", "custom_redirect_url": "http://google.com"}
+        ]
         csm = CustomSecurityManager(appbuilder=appbuilder)
         redirect_url = csm.get_oauth_redirect_url(provider="onadata")
         assert redirect_url == "http://google.com"
@@ -92,11 +88,7 @@ class TestOauth(SupersetTestCase):
         with the openlmis provider
         """
         # Data returned from userContactDetails endpoint
-        contacts_endpoint = {
-            "emailDetails": {
-                "email": "testauth@openlmis.org"
-            }
-        }
+        contacts_endpoint = {"emailDetails": {"email": "testauth@openlmis.org"}}
 
         # Data returned from users endpoint in openlmis
         users_endpoint = {
@@ -129,13 +121,13 @@ class TestOauth(SupersetTestCase):
         user_email = MagicMock()
         user_email.data = contacts_endpoint
 
-        request_mock = MagicMock(
-            side_effect=[reference_user, user_data, user_email])
+        request_mock = MagicMock(side_effect=[reference_user, user_data, user_email])
 
         appbuilder.sm.oauth_remotes["openlmis"].get = request_mock
         csm = CustomSecurityManager(appbuilder=appbuilder)
         csm.oauth_tokengetter = MagicMock(
-            return_value=["a337ec45-31a0-4f2b-9b2e-a105c4b669bb"])
+            return_value=["a337ec45-31a0-4f2b-9b2e-a105c4b669bb"]
+        )
         user_info = csm.oauth_user_info(provider="openlmis")
 
         assert request_mock.call_count == 3
@@ -144,8 +136,10 @@ class TestOauth(SupersetTestCase):
         contacts_call, _ = request_mock.call_args_list[2]
         assert check_token_call[0] == "oauth/check_token"
         assert user_call[0] == "users/a337ec45-31a0-4f2b-9b2e-a105c4b669bb"
-        assert (contacts_call[0] ==
-                "userContactDetails/a337ec45-31a0-4f2b-9b2e-a105c4b669bb")
+        assert (
+            contacts_call[0]
+            == "userContactDetails/a337ec45-31a0-4f2b-9b2e-a105c4b669bb"
+        )
 
         assert user_info == result_info
 
@@ -166,8 +160,7 @@ class TestOauth(SupersetTestCase):
         appbuilder = MagicMock()
         user_mock = MagicMock()
         user_mock.data = data
-        appbuilder.sm.oauth_remotes["OpenSRP"].get = MagicMock(
-            side_effect=[user_mock])
+        appbuilder.sm.oauth_remotes["OpenSRP"].get = MagicMock(side_effect=[user_mock])
         csm = CustomSecurityManager(appbuilder=appbuilder)
         user_info = csm.oauth_user_info(provider="OpenSRP")
         assert user_info == result_info
@@ -196,6 +189,22 @@ class TestOauth(SupersetTestCase):
         request_mock.assert_called_once_with("user-details")
         assert user_info2 == result_info2
 
+        # Sample data returned OpenSRP v2
+        data3 = {"username": "mosh", "roles": ["Privilege Level: Full"]}
+
+        # Expected result
+        result_info3 = {"email": "noreply+mosh@example.com", "username": "mosh"}
+
+        appbuilder3 = MagicMock()
+        user_mock3 = MagicMock()
+        user_mock3.data = data3
+        appbuilder3.sm.oauth_remotes["OpenSRP"].get = MagicMock(
+            side_effect=[user_mock3]
+        )
+        csm3 = CustomSecurityManager(appbuilder=appbuilder3)
+        user_info3 = csm3.oauth_user_info(provider="OpenSRP")
+        assert user_info3 == result_info3
+
     def test_oauth_user_info_no_provider(self):  # pylint: disable=R0201
         """
         Test that when no provider is provided
@@ -208,20 +217,18 @@ class TestOauth(SupersetTestCase):
 
     @patch("superset_patchup.oauth.SupersetSecurityManager.clean_perms")
     @patch("superset_patchup.oauth.SupersetSecurityManager.get_session")
-    @patch(
-        "superset_patchup.oauth.SupersetSecurityManager.create_missing_perms")
+    @patch("superset_patchup.oauth.SupersetSecurityManager.create_missing_perms")
     @patch("superset_patchup.oauth.CustomSecurityManager.is_custom_pvm")
     @patch("superset_patchup.oauth.CustomSecurityManager.set_custom_role")
-    @patch(
-        "superset_patchup.oauth.SupersetSecurityManager.sync_role_definitions")
+    @patch("superset_patchup.oauth.SupersetSecurityManager.sync_role_definitions")
     def test_custom_roles(
-            self,
-            mock_sync_role_definitions,
-            mock_set_custom_role,
-            mock_is_custom_pvm,
-            mock_create_missing_perms,  # pylint: disable=unused-argument
-            mock_get_session,  # pylint: disable=unused-argument
-            mock_clean_perms,
+        self,
+        mock_sync_role_definitions,
+        mock_set_custom_role,
+        mock_is_custom_pvm,
+        mock_create_missing_perms,  # pylint: disable=unused-argument
+        mock_get_session,  # pylint: disable=unused-argument
+        mock_clean_perms,
     ):  # pylint: disable=R0201,R0913
         """
         Test that when add custom roles is set to true, the roles specified
@@ -249,12 +256,12 @@ class TestOauth(SupersetTestCase):
     @patch("superset_patchup.oauth.login_user")
     @patch("superset_patchup.oauth.request")
     def test_oauth_authorized(
-            self,
-            mock_request,
-            mock_login,
-            mock_request_redirect,
-            mock_safe_url,
-            mock_redirect,
+        self,
+        mock_request,
+        mock_login,
+        mock_request_redirect,
+        mock_safe_url,
+        mock_redirect,
     ):  # pylint: disable=R0201,R0913
         """
         This test checks that
@@ -284,22 +291,25 @@ class TestOauth(SupersetTestCase):
         oauth_view = AuthOAuthView()
         oauth_view.appbuilder = MagicMock()
         oauth_view.appbuilder.sm.oauth_remotes[
-            "onadata"].authorized_response = MagicMock(
-                return_value=mock_authorized_response)
+            "onadata"
+        ].authorized_response = MagicMock(return_value=mock_authorized_response)
         mock_request.headers = {"Custom-Api-Token": "cZpwCzYjpzuSqzekM"}
         auth_session_mock = MagicMock()
         oauth_view.appbuilder.sm.set_oauth_session = auth_session_mock
         oauth_view.appbuilder.sm.oauth_user_info = MagicMock(
-            return_value=mock_user_info)
+            return_value=mock_user_info
+        )
         oauth_view.appbuilder.sm.oauth_whitelists = MagicMock()
         oauth_view.appbuilder.sm.auth_user_oauth = MagicMock(
-            return_value=mock_user_info)
+            return_value=mock_user_info
+        )
         oauth_view.appbuilder.sm.get_oauth_redirect_url = MagicMock()
         mock_request_redirect.return_value = "http://example.com"
         mock_safe_url.return_value = True
         oauth_view.oauth_authorized(provider="onadata")
         auth_session_mock.assert_called_with(
-            "onadata", {"access_token": "cZpwCzYjpzuSqzekM"})
+            "onadata", {"access_token": "cZpwCzYjpzuSqzekM"}
+        )
         assert mock_login.call_count == 1
         mock_redirect.assert_called_once_with("http://example.com")
 
@@ -309,12 +319,7 @@ class TestOauth(SupersetTestCase):
     @patch("superset_patchup.oauth.request.args.get")
     @patch("superset_patchup.oauth.request")
     def test_login_redirec(
-            self,
-            mock_request,
-            mock_redirect_arg,
-            mock_safe_url,
-            mock_g,
-            mock_redirect
+        self, mock_request, mock_redirect_arg, mock_safe_url, mock_g, mock_redirect
     ):  # pylint: disable=R0201,R0913,W0613
         """
         Test that we are redirected to the redirect url when it is passed
@@ -330,9 +335,9 @@ class TestOauth(SupersetTestCase):
         oauth_view.login(provider="onadata")
         mock_redirect.assert_called_once_with("/superset/dashboard/3")
 
-    @patch('superset_patchup.oauth.is_valid_provider')
+    @patch("superset_patchup.oauth.is_valid_provider")
     def test_is_valid_provider_is_called_for_opendata(
-            self, function_mock
+        self, function_mock
     ):  # pylint: disable=R0201
         """
         Test that is_valid_provider function is called for all provider names
@@ -355,14 +360,14 @@ class TestOauth(SupersetTestCase):
     @patch("superset_patchup.oauth.request.args.get")
     @patch("superset_patchup.oauth.request")
     def test_init_login_result_for_not_authorized_user(
-            self,
-            mock_request,
-            mock_redirect_arg,
-            mock_safe_url,
-            mock_g,
-            mock_make_response,
-            mock_jsonify,
-            mock_jwt
+        self,
+        mock_request,
+        mock_redirect_arg,
+        mock_safe_url,
+        mock_g,
+        mock_make_response,
+        mock_jsonify,
+        mock_jwt,
     ):  # pylint: disable=R0201,R0913,W0613
         """
         Test that checks if the correct response for a not authorized user
@@ -373,9 +378,9 @@ class TestOauth(SupersetTestCase):
 
         provider = "OPENLMIS"
         redirect_url = "/superset/dashboard/3"
-        state = '12345'
+        state = "12345"
 
-        with patch('superset_patchup.oauth.g.user.is_authenticated', False):
+        with patch("superset_patchup.oauth.g.user.is_authenticated", False):
             with patch("superset_patchup.oauth.session", dict()) as session:
                 mock_redirect_arg.return_value = redirect_url
                 mock_jwt.encode.return_value = state
@@ -383,18 +388,16 @@ class TestOauth(SupersetTestCase):
                 oauth_view.login_init(provider=provider)
 
                 mock_make_response.assert_called()
-                assert (call(isAuthorized=False, state=state) in
-                        mock_jsonify.call_args_list)
-                assert session.get('%s_oauthredir' % provider) == redirect_url
+                assert (
+                    call(isAuthorized=False, state=state) in mock_jsonify.call_args_list
+                )
+                assert session.get("%s_oauthredir" % provider) == redirect_url
 
     @patch("superset_patchup.oauth.jsonify")
     @patch("superset_patchup.oauth.make_response")
     @patch("superset_patchup.oauth.g")
     def test_init_login_result_for_already_authorized_user(
-            self,
-            mock_g,
-            mock_make_response,
-            mock_jsonify
+        self, mock_g, mock_make_response, mock_jsonify
     ):  # pylint: disable=R0201,W0613
         """
         Test that checks if the correct response for an already authorized
@@ -404,30 +407,26 @@ class TestOauth(SupersetTestCase):
         oauth_view.appbuilder = MagicMock()
         provider = "OPENLMIS"
 
-        with patch('superset_patchup.oauth.g.user.is_authenticated', True):
+        with patch("superset_patchup.oauth.g.user.is_authenticated", True):
             with patch("superset_patchup.oauth.session", dict()) as session:
 
                 oauth_view.login_init(provider=provider)
 
                 mock_make_response.assert_called()
                 assert call(isAuthorized=True) in mock_jsonify.call_args_list
-                assert (('%s_oauthredir' % provider) in session) is False
+                assert (("%s_oauthredir" % provider) in session) is False
 
     @patch("superset_patchup.oauth.request")
-    def test_generate_state_result(
-            self,
-            mock_request,
-    ):  # pylint: disable=R0201
+    def test_generate_state_result(self, mock_request):  # pylint: disable=R0201
         """
         Test that checks if a valid state is returned.
         """
         oauth_view = AuthOAuthView()
         oauth_view.appbuilder = MagicMock()
-        app_config = dict(SECRET_KEY='secret_key')
-        request_args = dict(dummy_parameter='dummy_parameter_value')
+        app_config = dict(SECRET_KEY="secret_key")
+        request_args = dict(dummy_parameter="dummy_parameter_value")
 
-        type(oauth_view.appbuilder.app).config = \
-            PropertyMock(return_value=app_config)
+        type(oauth_view.appbuilder.app).config = PropertyMock(return_value=app_config)
         mock_request.args.to_dict.return_value = request_args
 
         state = oauth_view.generate_state()

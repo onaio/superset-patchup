@@ -289,7 +289,8 @@ class CustomSecurityManager(SupersetSecurityManager):
         if is_valid_provider(provider, "OpenSRP"):
             user_object = (self.appbuilder.sm.oauth_remotes[provider].get(
                 "user-details").data)
-            username = user_object["userName"]
+
+            username = user_object.get("username") or user_object.get('userName')
 
             result = {"username": username}
 
