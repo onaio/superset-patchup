@@ -64,11 +64,23 @@ class AuthOAuthView(SupersetAuthOAuthView):
                         state=state,
                     )
                 )
+            callback = url_for(".oauth_authorized", provider=provider, _external=True)
+            logging.debug(f'Callback URI: {callback}')
+            callback = url_for(".oauth_authorized", provider=provider, _external=True,
+                               _scheme='https')
+            logging.debug(f'Callback URI: {callback}')
+            scheme = self.appbuilder.app.config.get('PREFERRED_URL_SCHEME')
+            callback = url_for(".oauth_authorized", provider=provider, _external=True,
+                               _scheme=scheme)
+            logging.debug(f'Callback URI {scheme}: {callback}')
+            for k, v in dict(request.headers).items():
+                logging.debug(f'Header - {k}: {v}')
             return self.appbuilder.sm.oauth_remotes[provider].authorize(
                 callback=url_for(
                     ".oauth_authorized",
                     provider=provider,
-                    _external=True
+                    _external=True,
+                    _scheme=scheme,
                 ),
                 state=state,
             )
