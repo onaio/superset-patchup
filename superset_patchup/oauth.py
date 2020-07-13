@@ -52,6 +52,7 @@ class AuthOAuthView(SupersetAuthOAuthView):
         logging.debug(f"Going to call authorize for: {provider}")
         state = self.generate_state()
         try:
+            scheme = self.appbuilder.app.config.get('PREFERRED_URL_SCHEME', 'https')
             if register:
                 logging.debug("Login to Register")
                 session["register"] = True
@@ -61,15 +62,14 @@ class AuthOAuthView(SupersetAuthOAuthView):
                         ".oauth_authorized",
                         provider=provider,
                         _external=True,
+                        _scheme=scheme,
                         state=state,
                     )
                 )
+            callback = url_for(".oauth_authorized", provider=provider, _external=True,
+                               _scheme=scheme)
             return self.appbuilder.sm.oauth_remotes[provider].authorize(
-                callback=url_for(
-                    ".oauth_authorized",
-                    provider=provider,
-                    _external=True
-                ),
+                callback=callback,
                 state=state,
             )
         except Exception as err:  # pylint: disable=broad-except

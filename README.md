@@ -10,7 +10,7 @@ This can be done this way:
 
 ```sh
 # to install version 0.1.0
-pip install git+https://github.com/onaio/superset-patchup.git@v0.1.0  
+pip install git+https://github.com/onaio/superset-patchup.git@v0.1.0
 ```
 
 Once installed, you would need to modify the `superset_config.py` to configure Superset using Superset-patchup.
@@ -27,6 +27,8 @@ To configure this, you would add the following to your `superset_config.py` file
 
 ```python
 # superset_config.py
+from flask_appbuilder.security.manager import AUTH_OAUTH
+
 from superset_patchup.oauth import CustomSecurityManager
 
 
@@ -36,14 +38,14 @@ OAUTH_PROVIDERS = [
 {
     'name': 'onadata',
     'icon': 'fa-rebel',
-        'token_key': 'access_token',
-        'remote_app': {
-            'consumer_key': 'consumer key goes here',
-            'consumer_secret': 'consumer secret goes here'
-            'base_url': 'https://stage-api.ona.io/',
-            'access_token_url': 'https://stage-api.ona.io/o/token/',
-            'authorize_url': 'https://stage-api.ona.io/o/authorize/'
-        }
+    'token_key': 'access_token',
+    'remote_app': {
+        'consumer_key': 'consumer key goes here',
+        'consumer_secret': 'consumer secret goes here',
+        'base_url': 'https://stage-api.ona.io/',
+        'access_token_url': 'https://stage-api.ona.io/o/token/',
+        'authorize_url': 'https://stage-api.ona.io/o/authorize/'
+    }
 }
 ]
 # end of standard Superset oAuth settings
@@ -58,6 +60,8 @@ To configure this, you would add the following to your `superset_config.py` file
 
 ```python
 # superset_config.py
+from flask_appbuilder.security.manager import AUTH_OAUTH
+
 from superset_patchup.oauth import CustomSecurityManager
 
 

@@ -2,13 +2,45 @@
 """
 This module tests oauth
 """
+import unittest
+
 from unittest.mock import MagicMock, patch, call, PropertyMock
 
+from flask_appbuilder import SQLA
 from superset import app
 
 from superset_patchup.oauth import AuthOAuthView, CustomSecurityManager
 
 from .base_tests import SupersetTestCase
+
+
+class TestLoginPreferHTTPS(unittest.TestCase):
+    """Some test"""
+    def setUp(self):
+        from flask import Flask  # pylint: disable=C0415,E0401
+        from flask_appbuilder import AppBuilder  # pylint: disable=C0415,E0401
+
+        self.app = Flask(__name__)
+        self.app.config.from_object('tests.test_config')
+        self.app.config['PREFERRED_URL_SCHEME'] = 'https'
+
+        self.db = SQLA(self.app)  # pylint: disable=invalid-name
+        self.appbuilder = AppBuilder(self.app, self.db.session,
+                                     security_manager_class=CustomSecurityManager)
+
+    def test_login(self):
+        """Test /login/<provider>"""
+        self.appbuilder.add_view(AuthOAuthView(), 'KetchupAuthOAuthView')
+        client = self.app.test_client()
+        response = client.get('/login/onadata')
+        self.assertEqual(response.status_code, 302)
+        # Confirm Redirect URL has https
+        self.assertIn('redirect_uri=https%3A', response.headers['Location'])
+
+    def tearDown(self):
+        self.db = None
+        self.app = None
+        self.appbuilder = None
 
 
 class TestOauth(SupersetTestCase):
@@ -318,8 +350,8 @@ class TestOauth(SupersetTestCase):
     @patch("superset_patchup.oauth.is_safe_url")
     @patch("superset_patchup.oauth.request.args.get")
     @patch("superset_patchup.oauth.request")
-    def test_login_redirec(
-        self, mock_request, mock_redirect_arg, mock_safe_url, mock_g, mock_redirect
+    def test_login_redirect(
+            self, mock_request, mock_redirect_arg, mock_safe_url, mock_g, mock_redirect
     ):  # pylint: disable=R0201,R0913,W0613
         """
         Test that we are redirected to the redirect url when it is passed
@@ -336,9 +368,7 @@ class TestOauth(SupersetTestCase):
         mock_redirect.assert_called_once_with("/superset/dashboard/3")
 
     @patch("superset_patchup.oauth.is_valid_provider")
-    def test_is_valid_provider_is_called_for_opendata(
-        self, function_mock
-    ):  # pylint: disable=R0201
+    def test_is_valid_provider_is_called_for_opendata(self, function_mock):
         """
         Test that is_valid_provider function is called for all provider names
         """
@@ -346,11 +376,11 @@ class TestOauth(SupersetTestCase):
         appbuilder = MagicMock()
         csm = CustomSecurityManager(appbuilder=appbuilder)
         csm.oauth_user_info(provider="Onadata")
-        assert call("Onadata", "onadata") in function_mock.call_args_list
+        self.assertIn(call("Onadata", "onadata"), function_mock.call_args_list)
         csm.oauth_user_info(provider="opensrp")
-        assert call("opensrp", "OpenSRP") in function_mock.call_args_list
+        self.assertIn(call("opensrp", "OpenSRP"), function_mock.call_args_list)
         csm.oauth_user_info(provider="OPENLMIS")
-        assert call("OPENLMIS", "openlmis") in function_mock.call_args_list
+        self.assertIn(call("OPENLMIS", "openlmis"), function_mock.call_args_list)
 
     @patch("superset_patchup.oauth.jwt")
     @patch("superset_patchup.oauth.jsonify")
