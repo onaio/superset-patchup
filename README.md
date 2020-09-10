@@ -40,9 +40,9 @@ OAUTH_PROVIDERS = [
     'icon': 'fa-rebel',
     'token_key': 'access_token',
     'remote_app': {
-        'consumer_key': 'consumer key goes here',
-        'consumer_secret': 'consumer secret goes here',
-        'base_url': 'https://stage-api.ona.io/',
+        'client_id': 'consumer key goes here',
+        'client_secret': 'consumer secret goes here',
+        'api_base_url': 'https://stage-api.ona.io/',
         'access_token_url': 'https://stage-api.ona.io/o/token/',
         'authorize_url': 'https://stage-api.ona.io/o/authorize/'
     }
@@ -73,9 +73,9 @@ OAUTH_PROVIDERS = [
     'icon': 'fa-eercast',
         'token_key': 'access_token',
         'remote_app': {
-            'consumer_key': 'consumer key goes here',
-            'consumer_secret': 'consumer secret goes here'
-            'base_url': 'https://stage-api.ona.io/',
+            'client_id': 'consumer key goes here',
+            'client_secret': 'consumer secret goes here'
+            'api_base_url': 'https://stage-api.ona.io/',
             'access_token_url': 'https://stage-api.ona.io/o/token/',
             'authorize_url': 'https://stage-api.ona.io/o/authorize/',
             # the redirect url is set below, it needs to be on the same domain as superset

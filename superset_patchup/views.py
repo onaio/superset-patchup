@@ -38,7 +38,6 @@ class SupersetKetchupApiView(superset.views.base.BaseSupersetView):
         Returns the ids, links, names, and URLs of the dashboards a user has
         access to.
         """
-
         dashboards = superset.db.session.query(
             superset.models.core.Dashboard)
 

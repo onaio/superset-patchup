@@ -100,9 +100,9 @@ class TestOauth(SupersetTestCase):
 
         appbuilder = MagicMock()
         user_mock = MagicMock()
-        user_mock.data = user_endpoint
+        user_mock.json.return_value = user_endpoint
         profile_mock = MagicMock()
-        profile_mock.data = profiles_endpoint
+        profile_mock.json.return_value = profiles_endpoint
         request_mock = MagicMock(side_effect=[user_mock, profile_mock])
         appbuilder.sm.oauth_remotes["onadata"].get = request_mock
         csm = CustomSecurityManager(appbuilder=appbuilder)
@@ -143,15 +143,15 @@ class TestOauth(SupersetTestCase):
 
         appbuilder = MagicMock()
         reference_user = MagicMock()
-        reference_user.data = {
+        reference_user.json.return_value = {
             "referenceDataUserId": "a337ec45-31a0-4f2b-9b2e-a105c4b669bb"
         }
 
         user_data = MagicMock()
-        user_data.data = users_endpoint
+        user_data.json.return_value = users_endpoint
 
         user_email = MagicMock()
-        user_email.data = contacts_endpoint
+        user_email.json.return_value = contacts_endpoint
 
         request_mock = MagicMock(side_effect=[reference_user, user_data, user_email])
 
@@ -191,7 +191,7 @@ class TestOauth(SupersetTestCase):
 
         appbuilder = MagicMock()
         user_mock = MagicMock()
-        user_mock.data = data
+        user_mock.json.return_value = data
         appbuilder.sm.oauth_remotes["OpenSRP"].get = MagicMock(side_effect=[user_mock])
         csm = CustomSecurityManager(appbuilder=appbuilder)
         user_info = csm.oauth_user_info(provider="OpenSRP")
@@ -214,11 +214,11 @@ class TestOauth(SupersetTestCase):
         appbuilder2 = MagicMock()
         user_mock2 = MagicMock()
         request_mock = MagicMock(side_effect=[user_mock2])
-        user_mock2.data = data2
+        user_mock2.json.return_value = data2
         appbuilder2.sm.oauth_remotes["OpenSRP"].get = request_mock
         csm2 = CustomSecurityManager(appbuilder=appbuilder2)
         user_info2 = csm2.oauth_user_info(provider="OpenSRP")
-        request_mock.assert_called_once_with("user-details")
+        request_mock.assert_called_once_with("user-details", token=None)
         assert user_info2 == result_info2
 
         # Sample data returned OpenSRP v2
@@ -229,7 +229,7 @@ class TestOauth(SupersetTestCase):
 
         appbuilder3 = MagicMock()
         user_mock3 = MagicMock()
-        user_mock3.data = data3
+        user_mock3.json.return_value = data3
         appbuilder3.sm.oauth_remotes["OpenSRP"].get = MagicMock(
             side_effect=[user_mock3]
         )

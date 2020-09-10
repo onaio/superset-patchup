@@ -57,8 +57,8 @@ class AuthOAuthView(SupersetAuthOAuthView):
                 logging.debug("Login to Register")
                 session["register"] = True
             if provider == "twitter":
-                return self.appbuilder.sm.oauth_remotes[provider].authorize(
-                    callback=url_for(
+                return self.appbuilder.sm.oauth_remotes[provider].authorize_redirect(
+                    redirect_uri=url_for(
                         ".oauth_authorized",
                         provider=provider,
                         _external=True,
@@ -68,9 +68,8 @@ class AuthOAuthView(SupersetAuthOAuthView):
                 )
             callback = url_for(".oauth_authorized", provider=provider, _external=True,
                                _scheme=scheme)
-            return self.appbuilder.sm.oauth_remotes[provider].authorize(
-                callback=callback,
-                state=state,
+            return self.appbuilder.sm.oauth_remotes[provider].authorize_redirect(
+                redirect_uri=callback,
             )
         except Exception as err:  # pylint: disable=broad-except
             logging.error(f"Error on OAuth authorize: {err}")
@@ -117,7 +116,7 @@ class AuthOAuthView(SupersetAuthOAuthView):
         """View that a user is redirected to from the Oauth server"""
 
         logging.debug("Authorized init")
-        resp = self.appbuilder.sm.oauth_remotes[provider].authorized_response()
+        resp = self.appbuilder.sm.oauth_remotes[provider].authorize_access_token()
         if "Custom-Api-Token" in request.headers:
             resp = {"access_token": request.headers.get("Custom-Api-Token")}
         if resp is None:
@@ -272,10 +271,10 @@ class CustomSecurityManager(SupersetSecurityManager):
 
         if is_valid_provider(provider, "onadata"):
             user = (self.appbuilder.sm.oauth_remotes[provider].get(
-                "api/v1/user.json").data)
+                "api/v1/user.json", token=response).json())
 
             user_data = (self.appbuilder.sm.oauth_remotes[provider].get(
-                f"api/v1/profiles/{user['username']}.json").data)
+                f"api/v1/profiles/{user['username']}.json", token=response).json())
 
             return {
                 "name": user_data["name"],
@@ -288,7 +287,7 @@ class CustomSecurityManager(SupersetSecurityManager):
 
         if is_valid_provider(provider, "OpenSRP"):
             user_object = (self.appbuilder.sm.oauth_remotes[provider].get(
-                "user-details").data)
+                "user-details", token=response).json())
 
             username = user_object.get("username") or user_object.get('userName')
 
@@ -309,15 +308,15 @@ class CustomSecurityManager(SupersetSecurityManager):
             # get referenceDataUserId
             reference_user = self.appbuilder.sm.oauth_remotes[provider].get(
                 "oauth/check_token", data={"token": my_token})
-            reference_data_user_id = reference_user.data["referenceDataUserId"]
+            reference_data_user_id = reference_user.json()["referenceDataUserId"]
             # get user details
             endpoint = f"users/{reference_data_user_id}"
             user_data = self.appbuilder.sm.oauth_remotes[provider].get(
-                endpoint).data
+                endpoint, token=response).json()
             # get email
             email_endpoint = f"userContactDetails/{reference_data_user_id}"
             email = self.appbuilder.sm.oauth_remotes[provider].get(
-                email_endpoint).data
+                email_endpoint, token=response).json()
             return {
                 "name": user_data["username"],
                 "email": email["emailDetails"]["email"],
