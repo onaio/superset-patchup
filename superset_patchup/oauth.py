@@ -116,9 +116,11 @@ class AuthOAuthView(SupersetAuthOAuthView):
         """View that a user is redirected to from the Oauth server"""
 
         logging.debug("Authorized init")
-        resp = self.appbuilder.sm.oauth_remotes[provider].authorize_access_token()
         if "Custom-Api-Token" in request.headers:
+            logging.debug("Custom-Api-Token is present")
             resp = {"access_token": request.headers.get("Custom-Api-Token")}
+        else:
+            resp = self.appbuilder.sm.oauth_remotes[provider].authorize_access_token()
         if resp is None:
             flash("You denied the request to sign in.", "warning")
             return redirect("/login")
