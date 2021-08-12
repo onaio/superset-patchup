@@ -104,6 +104,12 @@ class AuthOAuthView(SupersetAuthOAuthView):
         session['%s_oauthredir' % provider] = redirect_url
 
         state = self.generate_state()
+
+        # Newest version of Superset for OpenLMIS
+        stateString = state.decode('utf-8')
+        session[f'_{provider}_authlib_state_'] = stateString
+        session[f'_{provider}_authlib_redirect_uri_'] = redirect_url
+
         return make_response(jsonify(
             isAuthorized=False,
             state=state
@@ -308,7 +314,7 @@ class CustomSecurityManager(SupersetSecurityManager):
             # get access token
             my_token = self.oauth_tokengetter()[0]
             # get referenceDataUserId
-            reference_user = self.appbuilder.sm.oauth_remotes[provider].get(
+            reference_user = self.appbuilder.sm.oauth_remotes[provider].post(
                 "oauth/check_token", data={"token": my_token})
             reference_data_user_id = reference_user.json()["referenceDataUserId"]
             # get user details
