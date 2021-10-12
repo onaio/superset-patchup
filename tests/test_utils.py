@@ -69,4 +69,5 @@ class TestUtils(SupersetTestCase):
         assert is_valid_provider("opensrp", "OpenSRP")
         assert is_valid_provider("OnaData", 'onadata')
         assert is_valid_provider("OpenlMis", "openlmis")
+        assert is_valid_provider("Opensrp-preview", "opensrp")
         assert not is_valid_provider("oensrp", "OpenSrp")
