@@ -51,6 +51,7 @@ def is_valid_provider(user_input: str, static_provider: str) -> bool:
     Validate a user's provider input  irrespectve of case
     """
     try:
-        return user_input.lower() == static_provider.lower()
+        return user_input.lower() == static_provider.lower() or \
+            user_input.lower().find(static_provider.lower()) != -1
     except AttributeError:
         return False
