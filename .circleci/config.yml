@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/python:3.6.1
+      - image: cimg/python:3.8
 
     working_directory: ~/repo
 
@@ -10,19 +10,19 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - v1-dependencies-{{ checksum "requirements/dev.txt" }}
-            - v1-dependencies-
+            - patchup-{{ .Environment.CACHE_VERSION }}-dependencies-{{ checksum "requirements/dev.txt" }}
 
       - run:
           name: install system dependencies
           # libsasl2-dev is required to install superset successfully
           command: |
-            sudo apt-get install libsasl2-dev
+            sudo apt-get update && sudo apt-get install libsasl2-dev
 
       - run:
           name: install dependencies
           command: |
-            python3 -m venv venv
+            python -V
+            python -m venv venv
             . venv/bin/activate
             pip install --upgrade pip tox
             pip install -r requirements/dev.txt
@@ -30,7 +30,7 @@ jobs:
       - save_cache:
           paths:
             - ./venv
-          key: v1-dependencies-{{ checksum "requirements/dev.txt" }}
+          key: patchup-{{ .Environment.CACHE_VERSION }}-dependencies-{{ checksum "requirements/dev.txt" }}
 
       - run:
           name: run tests
