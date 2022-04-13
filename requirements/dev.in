@@ -2,10 +2,12 @@
 -e .
 
 # others
+click<8
 pylint
 pylint-flask
 tox
 flake8
+flask>=1.1.0, <2.0.0
 flask-testing
 pep8
 pydocstyle
@@ -13,6 +15,6 @@ coverage
 yapf
 isort
 ipdb
-black
+black==21.12b0
 pip-tools
 pytest
