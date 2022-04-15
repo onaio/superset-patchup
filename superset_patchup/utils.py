@@ -42,8 +42,7 @@ def is_safe_url(target_url):
     """
     ref_url = urlparse(request.host_url)
     test_url = urlparse(urljoin(request.host_url, target_url))
-    return test_url.scheme in ("http",
-                               "https") and ref_url.netloc == test_url.netloc
+    return test_url.scheme in ("http", "https") and ref_url.netloc == test_url.netloc
 
 
 def is_valid_provider(user_input: str, static_provider: str) -> bool:
@@ -51,7 +50,9 @@ def is_valid_provider(user_input: str, static_provider: str) -> bool:
     Validate a user's provider input  irrespectve of case
     """
     try:
-        return user_input.lower() == static_provider.lower() or \
-            user_input.lower().find(static_provider.lower()) != -1
+        return (
+            user_input.lower() == static_provider.lower()
+            or user_input.lower().find(static_provider.lower()) != -1
+        )
     except AttributeError:
         return False

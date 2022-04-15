@@ -8,7 +8,8 @@ import uuid
 import superset
 
 from superset.connectors.sqla.models import SqlaTable
-from superset.models.core import Dashboard
+from superset.models.core import Database
+from superset.models.dashboard import Dashboard
 from superset.models.slice import Slice
 
 
@@ -16,7 +17,7 @@ from superset.models.slice import Slice
 # https://github.com/apache/incubator-superset/blob/0.27/tests/import_export_tests.py
 # ... but sadly these aren't packaged for our re-use.
 # Also they're weird in places.
-def create_table(name=None, database_name='main', schema='', tags=None):
+def create_table(name=None, database_name="main", schema="", tags=None):
 
     """Create a new test table (by default in the 'main' db)"""
 
@@ -24,21 +25,24 @@ def create_table(name=None, database_name='main', schema='', tags=None):
         name = "table-%s" % uuid.uuid4()
 
     if tags is None:
-        tags = ['test']
+        tags = ["test"]
+    db = superset.db.session.query(Database).first()
 
     table = SqlaTable(
+        database_id=db.id,
         table_name=name,
         #
         schema=schema,
-        params=json.dumps(dict(
-            tags=tags,
-            database_name=database_name,
-        )),
+        params=json.dumps(
+            dict(
+                tags=tags,
+                database_name=database_name,
+            )
+        ),
     )
+    superset.db.session.add(table)
 
-    # Return imported obj
-    return superset.db.session.query(SqlaTable).filter_by(
-        id=SqlaTable.import_obj(table)).first()
+    return superset.db.session.query(SqlaTable).filter_by(table_name=name).first()
 
 
 def new_slice(name=None, table=None, tags=None):
@@ -52,20 +56,23 @@ def new_slice(name=None, table=None, tags=None):
         table = create_table(tags=tags)
 
     if tags is None:
-        tags = ['test']
+        tags = ["test"]
 
     slyce = Slice(
         slice_name=name,
-        datasource_type='table',
+        datasource_type="table",
         datasource_name=table.datasource_name,
-        viz_type='bubble',
-        params=json.dumps(dict(
-            tags=tags,
-            database_name=table.database_name,
-            datasource_name=table.datasource_name,
-            schema=table.schema,
-            metrics=[],
-        )),
+        viz_type="bubble",
+        params=json.dumps(
+            dict(
+                tags=tags,
+                database_name=table.database_name,
+                datasource_name=table.datasource_name,
+                schema=table.schema,
+                metrics=[],
+            )
+        ),
+        perm=table.perm,
     )
 
     # NOTE that we don't actually import the slice here - it needs to
@@ -78,7 +85,7 @@ def create_dashboard(title=None, slices=None, tags=None):
     """Create a new test dashboard (and slice and table if needed)"""
 
     if tags is None:
-        tags = ['test']
+        tags = ["test"]
 
     if title is None:
         title = "dashboard-%s" % uuid.uuid4()
@@ -94,9 +101,12 @@ def create_dashboard(title=None, slices=None, tags=None):
         json_metadata=json.dumps(dict(tags=tags)),
     )
 
+    superset.db.session.add(dashboard)
+
     # Return imported obj
-    dashboard = superset.db.session.query(Dashboard).filter_by(
-        id=Dashboard.import_obj(dashboard)).first()
+    dashboard = (
+        superset.db.session.query(Dashboard).filter_by(slug=dashboard.slug).first()
+    )
     dashboard.published = True
     superset.db.session.merge(dashboard)
     superset.db.session.commit()
@@ -120,11 +130,11 @@ def cleanup_objs(model, tags=None):
     """
 
     if tags is None:
-        tags = ['test']
+        tags = ["test"]
 
     tags = set(tags)
     for obj in superset.db.session.query(model):
-        obj_tags = getattr(obj, 'params_dict', {}).get('tags', [])
+        obj_tags = getattr(obj, "params_dict", {}).get("tags", [])
         if tags.isdisjoint(obj_tags):
             continue
         superset.db.session.delete(obj)
@@ -133,12 +143,12 @@ def cleanup_objs(model, tags=None):
 
 def grant_db_access_to_role(role, db):  # pylint: disable=invalid-name
     """Grant the role 'database_name', returns grant permission."""
-    return grant_obj_permission_to_role(role, db, 'database_access')
+    return grant_obj_permission_to_role(role, db, "database_access")
 
 
 def grant_slice_access_to_role(role, slyce):
     """Grant the role 'datasource_access', returns grant permission."""
-    return grant_obj_permission_to_role(role, slyce, 'datasource_access')
+    return grant_obj_permission_to_role(role, slyce, "datasource_access")
 
 
 def grant_obj_permission_to_role(role, obj, permission):

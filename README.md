@@ -141,7 +141,7 @@ PATCHUP_EMAIL_BASE = "ketchup@example.com"
 With this in place, Superset-patchup will assign each user an email in the form of `ketchup+USERNAME@example.com`.  So, for example, if a user named `bobbie` signed in, his email would be set as `ketchup+bobbie@example.com`.
 
 ### Dashboards list endpoint
-There are cases where you simply want a list of all the dashboards that are available to a user. This could be to display in a separate website or to help in making some other decision like for example what permissions to grant a user, or what tasks can be assigned to a user based on what dashboards they have access to. With the SupersetKetchupApiView, ketchup exposes a new endpoint `all_dashboards` which uses superset's DashboardFilter to return a list of all the dashboards that the user has access to.
+There are cases where you simply want a list of all the dashboards that are available to a user. This could be to display in a separate website or to help in making some other decision like for example what permissions to grant a user, or what tasks can be assigned to a user based on what dashboards they have access to. With the SupersetKetchupApiView, ketchup exposes a new endpoint `all_dashboards` which uses superset's DashboardAccessFilter to return a list of all the dashboards that the user has access to.
 
 To get the dashboard list you would need to make a `GET` request to `/superset-ketchup/api/all_dashboards/` and the response will be something like
 

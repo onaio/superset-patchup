@@ -232,8 +232,9 @@ mako==1.2.0
     # via alembic
 markdown==3.3.6
     # via apache-superset
-markupsafe==2.1.1
+markupsafe==2.0.1
     # via
+    #   -r requirements/dev.in
     #   jinja2
     #   mako
     #   wtforms

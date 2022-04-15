@@ -7,7 +7,7 @@ from flask_appbuilder.security.decorators import has_access_api
 from flask_appbuilder.models.sqla.interface import SQLAInterface
 import superset.views
 
-from .version import (VERSION, __version__)
+from .version import VERSION, __version__
 
 
 class SupersetKetchupApiView(superset.views.base.BaseSupersetView):
@@ -21,15 +21,14 @@ class SupersetKetchupApiView(superset.views.base.BaseSupersetView):
         super().__init__()
 
     @superset.views.base.api
-    @expose('/version/', methods=['GET'])
+    @expose("/version/", methods=["GET"])
     def version(self):
         """Returns *superset-patchup* api version"""
-        return self.json_response(
-            {'version': VERSION, 'versionStr': __version__})
+        return self.json_response({"version": VERSION, "versionStr": __version__})
 
     @superset.views.base.api
     @has_access_api
-    @expose('/all_dashboards/', methods=['GET'])
+    @expose("/all_dashboards/", methods=["GET"])
     def all_dashboards(self):
 
         """
@@ -38,8 +37,7 @@ class SupersetKetchupApiView(superset.views.base.BaseSupersetView):
         Returns the ids, links, names, and URLs of the dashboards a user has
         access to.
         """
-        dashboards = superset.db.session.query(
-            superset.models.core.Dashboard)
+        dashboards = superset.db.session.query(superset.models.dashboard.Dashboard)
 
         # Query only dashboards where we have at least some access - note that
         # this exact query filter is used in the core Superset view to prune
@@ -48,10 +46,9 @@ class SupersetKetchupApiView(superset.views.base.BaseSupersetView):
         # accessible by user"
         # See: https://github.com/apache/incubator-superset/blob/0.27/
         # superset/views/core.py#L154
-        view_filter = \
-            superset.views.dashboard.filters.DashboardFilter(
-                'slice',
-                SQLAInterface(superset.models.core.Dashboard))
+        view_filter = superset.dashboards.filters.DashboardAccessFilter(
+            "slice", SQLAInterface(superset.models.dashboard.Dashboard)
+        )
 
         dashboards = view_filter.apply(dashboards, lambda: None)
 
@@ -59,10 +56,10 @@ class SupersetKetchupApiView(superset.views.base.BaseSupersetView):
         for dashboard in dashboards:
 
             value = {
-                'id': dashboard.id,
-                'dashboard_link': dashboard.dashboard_link(),
-                'dashboard_title': dashboard.dashboard_title,
-                'url': dashboard.url,
+                "id": dashboard.id,
+                "dashboard_link": dashboard.dashboard_link(),
+                "dashboard_title": dashboard.dashboard_title,
+                "url": dashboard.url,
             }
 
             payload.append(value)
