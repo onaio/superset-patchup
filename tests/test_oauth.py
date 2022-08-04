@@ -16,26 +16,28 @@ from .base_tests import SupersetTestCase
 
 class TestLoginPreferHTTPS(unittest.TestCase):
     """Some test"""
+
     def setUp(self):
         from flask import Flask  # pylint: disable=C0415,E0401
         from flask_appbuilder import AppBuilder  # pylint: disable=C0415,E0401
 
         self.app = Flask(__name__)
-        self.app.config.from_object('tests.test_config')
-        self.app.config['PREFERRED_URL_SCHEME'] = 'https'
+        self.app.config.from_object("tests.test_config")
+        self.app.config["PREFERRED_URL_SCHEME"] = "https"
 
         self.db = SQLA(self.app)  # pylint: disable=invalid-name
-        self.appbuilder = AppBuilder(self.app, self.db.session,
-                                     security_manager_class=CustomSecurityManager)
+        self.appbuilder = AppBuilder(
+            self.app, self.db.session, security_manager_class=CustomSecurityManager
+        )
 
     def test_login(self):
         """Test /login/<provider>"""
-        self.appbuilder.add_view(AuthOAuthView(), 'KetchupAuthOAuthView')
+        self.appbuilder.add_view(AuthOAuthView(), "KetchupAuthOAuthView")
         client = self.app.test_client()
-        response = client.get('/login/onadata')
+        response = client.get("/login/onadata")
         self.assertEqual(response.status_code, 302)
         # Confirm Redirect URL has https
-        self.assertIn('redirect_uri=https%3A', response.headers['Location'])
+        self.assertIn("redirect_uri=https%3A", response.headers["Location"])
 
     def tearDown(self):
         self.db = None
@@ -153,19 +155,22 @@ class TestOauth(SupersetTestCase):
         user_email = MagicMock()
         user_email.json.return_value = contacts_endpoint
 
-        request_mock = MagicMock(side_effect=[reference_user, user_data, user_email])
+        request_post_mock = MagicMock(side_effect=[reference_user])
+        request_get_mock = MagicMock(side_effect=[user_data, user_email])
 
-        appbuilder.sm.oauth_remotes["openlmis"].get = request_mock
+        appbuilder.sm.oauth_remotes["openlmis"].get = request_get_mock
+        appbuilder.sm.oauth_remotes["openlmis"].post = request_post_mock
         csm = CustomSecurityManager(appbuilder=appbuilder)
         csm.oauth_tokengetter = MagicMock(
             return_value=["a337ec45-31a0-4f2b-9b2e-a105c4b669bb"]
         )
         user_info = csm.oauth_user_info(provider="openlmis")
 
-        assert request_mock.call_count == 3
-        check_token_call, _ = request_mock.call_args_list[0]
-        user_call, _ = request_mock.call_args_list[1]
-        contacts_call, _ = request_mock.call_args_list[2]
+        assert request_get_mock.call_count == 2
+        assert request_post_mock.call_count == 1
+        check_token_call, _ = request_post_mock.call_args_list[0]
+        user_call, _ = request_get_mock.call_args_list[0]
+        contacts_call, _ = request_get_mock.call_args_list[1]
         assert check_token_call[0] == "oauth/check_token"
         assert user_call[0] == "users/a337ec45-31a0-4f2b-9b2e-a105c4b669bb"
         assert (
@@ -351,7 +356,7 @@ class TestOauth(SupersetTestCase):
     @patch("superset_patchup.oauth.request.args.get")
     @patch("superset_patchup.oauth.request")
     def test_login_redirect(
-            self, mock_request, mock_redirect_arg, mock_safe_url, mock_g, mock_redirect
+        self, mock_request, mock_redirect_arg, mock_safe_url, mock_g, mock_redirect
     ):  # pylint: disable=R0201,R0913,W0613
         """
         Test that we are redirected to the redirect url when it is passed
