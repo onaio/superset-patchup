@@ -305,16 +305,16 @@ class CustomSecurityManager(SupersetSecurityManager):
         if is_valid_provider(provider, "OpenSRP"):
             user_object = (
                 self.appbuilder.sm.oauth_remotes[provider]
-                .get("user-details", token=response)
+                .get("userinfo", token=response)
                 .json()
             )
 
-            username = user_object.get("username") or user_object.get("userName")
+            username = user_object.get("preferred_username")
 
             result = {"username": username}
 
-            if user_object.get("preferredName"):
-                result["name"] = user_object.get("preferredName")
+            if user_object.get("name"):
+                result["name"] = user_object.get("name")
 
             if email_base:
                 # change emails from name@xyz.com to name+username@xyz.com

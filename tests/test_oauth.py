@@ -188,59 +188,26 @@ class TestOauth(SupersetTestCase):
         # set test configs
         app.config["PATCHUP_EMAIL_BASE"] = "noreply@example.com"
 
-        # Sample data returned OpenSRP
-        data = {"userName": "tlv1", "roles": ["Privilege Level: Full"]}
+        # Sample data returned KeyCloak
+        data = {
+            "sub": "296fad33-ad11-4030-86e5-405025149224",
+            "email_verified": False,
+            "preferred_username": "test-user",
+            "enabled": True
+        }
 
         # Expected result
-        result_info = {"email": "noreply+tlv1@example.com", "username": "tlv1"}
+        result_info = {"email": "noreply+test-user@example.com", "username": "test-user"}
 
         appbuilder = MagicMock()
         user_mock = MagicMock()
         user_mock.json.return_value = data
-        appbuilder.sm.oauth_remotes["OpenSRP"].get = MagicMock(side_effect=[user_mock])
+        appbuilder.sm.oauth_remotes["OpenSRP"].get = MagicMock(
+            side_effect=[user_mock]
+        )
         csm = CustomSecurityManager(appbuilder=appbuilder)
         user_info = csm.oauth_user_info(provider="OpenSRP")
         assert user_info == result_info
-
-        # Sample data returned OpenSRP with preferredName
-        data2 = {
-            "preferredName": "mosh",
-            "userName": "mosh",
-            "roles": ["Privilege Level: Full"],
-        }
-
-        # Expected result
-        result_info2 = {
-            "email": "noreply+mosh@example.com",
-            "name": "mosh",
-            "username": "mosh",
-        }
-
-        appbuilder2 = MagicMock()
-        user_mock2 = MagicMock()
-        request_mock = MagicMock(side_effect=[user_mock2])
-        user_mock2.json.return_value = data2
-        appbuilder2.sm.oauth_remotes["OpenSRP"].get = request_mock
-        csm2 = CustomSecurityManager(appbuilder=appbuilder2)
-        user_info2 = csm2.oauth_user_info(provider="OpenSRP")
-        request_mock.assert_called_once_with("user-details", token=None)
-        assert user_info2 == result_info2
-
-        # Sample data returned OpenSRP v2
-        data3 = {"username": "mosh", "roles": ["Privilege Level: Full"]}
-
-        # Expected result
-        result_info3 = {"email": "noreply+mosh@example.com", "username": "mosh"}
-
-        appbuilder3 = MagicMock()
-        user_mock3 = MagicMock()
-        user_mock3.json.return_value = data3
-        appbuilder3.sm.oauth_remotes["OpenSRP"].get = MagicMock(
-            side_effect=[user_mock3]
-        )
-        csm3 = CustomSecurityManager(appbuilder=appbuilder3)
-        user_info3 = csm3.oauth_user_info(provider="OpenSRP")
-        assert user_info3 == result_info3
 
     def test_oauth_user_info_no_provider(self):  # pylint: disable=R0201
         """
