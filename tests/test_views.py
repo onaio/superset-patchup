@@ -20,7 +20,7 @@ class TestApiViews(SupersetTestCase):
 
     def setUp(self):
         superset.db.create_all()
-        superset.utils.core.get_or_create_db("main", "sqlite:///main.db")
+        superset.utils.database.get_or_create_db("main", "sqlite:///main.db")
         superset.appbuilder.add_permissions(update_perms=True)
         superset.security_manager.sync_role_definitions()
 
